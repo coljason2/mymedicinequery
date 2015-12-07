@@ -100,10 +100,10 @@ public class getQuery {
 		String cookiePara = "";
 		try {
 			Connection.Response res = Jsoup
-					.connect("https://www.chahwa.com.tw/user.php")
+					.connect("http://www.chahwa.com.tw/user.php")
 					.data("username", form.getUsername(), "password",
 							form.getPassword(), "wsrc", form.getWsrc(), "act",
-							form.getAct(), "back_act", form.getBack_act())
+							form.getAct(), "back_act", form.getBack_act(),"submit","")
 					.method(Method.POST).execute();
 			cookies = res.cookies();
 

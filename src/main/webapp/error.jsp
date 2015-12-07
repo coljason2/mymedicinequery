@@ -7,10 +7,16 @@
 <title>頁面錯誤</title>
 </head>
 <body>
+	<%@ page isErrorPage="true"%>
 	<jsp:include page="/layout/nav.jsp" />
 	<div class="container">
 		<div class="jumbotron">
 			<h2>網頁錯誤@@!請重新查詢</h2>
+			<p>
+				<%
+					exception.printStackTrace(new java.io.PrintWriter(out));
+				%>
+			<p>
 		</div>
 	</div>
 	<jsp:include page="/layout/foot.jsp" />

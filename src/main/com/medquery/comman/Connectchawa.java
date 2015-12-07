@@ -19,7 +19,7 @@ public class Connectchawa extends HttpServlet {
 	public Map<String, String> Connect() {
 		try {
 			Connection.Response res = Jsoup
-					.connect("https://www.chahwa.com.tw/user.php")
+					.connect("http://www.chahwa.com.tw/user.php")
 					.userAgent(Agent)
 					.data("username", form.getUsername(), "password",
 							form.getPassword(), "wsrc", form.getWsrc(), "act",
