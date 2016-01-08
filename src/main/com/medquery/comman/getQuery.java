@@ -20,6 +20,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 public class getQuery {
+	
 	final Logger log = Logger.getLogger(getQuery.class.getName());
 	final String getdrug = "http://www.chahwa.com.tw/order.php?act=query&&drug=";
 
