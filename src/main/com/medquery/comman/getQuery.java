@@ -20,7 +20,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 public class getQuery {
-	
 	final Logger log = Logger.getLogger(getQuery.class.getName());
 	final String getdrug = "http://www.chahwa.com.tw/order.php?act=query&&drug=";
 
@@ -101,10 +100,10 @@ public class getQuery {
 		String cookiePara = "";
 		try {
 			Connection.Response res = Jsoup
-					.connect("http://www.chahwa.com.tw/user.php")
+					.connect("https://www.chahwa.com.tw/user.php")
 					.data("username", form.getUsername(), "password",
 							form.getPassword(), "wsrc", form.getWsrc(), "act",
-							form.getAct(), "back_act", form.getBack_act(),"submit","")
+							form.getAct(), "back_act", form.getBack_act())
 					.method(Method.POST).execute();
 			cookies = res.cookies();
 

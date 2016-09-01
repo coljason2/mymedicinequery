@@ -5,7 +5,7 @@ public class LoginFormData {
 	// π≈ÙÛµn§Jloginform
 	private String username = "Lisanitamy";
 	private String password = "3679498";
-	private String wsrc = "aI9wZmmfaZqRaFeXaZebaG5ybG9sc6ibyZLJn6Ks3HBoj3BmaZ9rk5FoV5dpl5tobnJsb2xzpqTQmKFgY2-XZXGZaWR";
+	private String wsrc = "aI9tZG2XZJeRaFeXaZaSZ29uZW1xc6ibyZLJn6Ks3HBoj21kbZdlmpFoV5dplpJnb25lbXFzpqTQmKFgY2yVaWmTcGRphmWVlGhqnWqVlm0";
 	private String act = "act_login";
 	private String back_act = "user.php";
 

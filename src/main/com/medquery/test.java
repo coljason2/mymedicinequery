@@ -24,7 +24,7 @@ public class test {
 	public static void main(String[] args) throws IOException {
 		LoginFormData form = new LoginFormData();
 		Connection.Response res = Jsoup
-				.connect("http://www.chahwa.com.tw/user.php")
+				.connect("https://www.chahwa.com.tw/user.php")
 				.data("username", form.getUsername(), "password",
 						form.getPassword(), "wsrc", form.getWsrc(), "act",
 						form.getAct(), "back_act", form.getBack_act())

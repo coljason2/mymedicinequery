@@ -3,7 +3,7 @@
 <nav class="navbar navbar-inverse navbar-fixed-top">
 	<div class="container">
 		<div class="navbar-header">
-			<a class="navbar-brand" href="<%=request.getContextPath()%>/">藥品查詢</a>
+			<a class="navbar-brand" href="<%=request.getContextPath()%>/index">藥品查詢</a>
 			<form class="navbar-form navbar-left" action="query" method="get">
 				<div class="input-group">
 					<input type="text" name="querystring" placeholder="輸入要查詢藥名"
