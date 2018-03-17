@@ -2,6 +2,7 @@ package medquery;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.servlet.RequestDispatcher;
@@ -20,22 +21,17 @@ public class QueryServlet extends HttpServlet {
 	final Logger log = Logger.getLogger(QueryServlet.class.getName());
 
 	@Override
-	public void doGet(HttpServletRequest req, HttpServletResponse resp)
-			throws IOException, ServletException {
+	public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
 		getQuery getmed = new getQuery();
-		medicine = new String(req.getParameter("querystring").getBytes(
-				"ISO-8859-1"), "UTF-8");
-		log.info("querystring:" + medicine);
+		medicine = new String(req.getParameter("querystring").getBytes("ISO-8859-1"), "UTF-8");
 		List<MedEntity> meds = getmed.getMedicine(medicine);
-		log.info(meds.toString());
 		req.setAttribute("meds", meds);
 		RequestDispatcher view = req.getRequestDispatcher("resault.jsp");
 		view.forward(req, resp);
 	}
 
 	@Override
-	public void doPost(HttpServletRequest req, HttpServletResponse resp)
-			throws ServletException, IOException {
+	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		doGet(req, resp);
 	}
 }

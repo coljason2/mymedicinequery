@@ -30,5 +30,12 @@
 		</table>
 	</div>
 </body>
+<script>
+	$("table").tableExport({
+		formats : [ "txt" ],
+		bootstrap : true,
+		position : "bottom"
+	});
+</script>
 <jsp:include page="/layout/foot.jsp" />
 </html>
