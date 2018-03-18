@@ -26,6 +26,7 @@ public class QueryServlet extends HttpServlet {
 		medicine = new String(req.getParameter("querystring").getBytes("ISO-8859-1"), "UTF-8");
 		List<MedEntity> meds = getmed.getMedicine(medicine);
 		req.setAttribute("meds", meds);
+		req.setAttribute("querystring", medicine);
 		RequestDispatcher view = req.getRequestDispatcher("resault.jsp");
 		view.forward(req, resp);
 	}

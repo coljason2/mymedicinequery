@@ -7,13 +7,8 @@
 	src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
 <script type="text/javascript"
 	src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-<script
-	src="https://fastcdn.org/FileSaver.js/1.1.20151003/FileSaver.min.js"></script>
-<script src="https://fastcdn.org/FileSaver.js/1.1.20151003/FileSaver.js"></script>
-<script
-	src="https://cdnjs.cloudflare.com/ajax/libs/Base64/1.0.1/base64.js"></script>
-<script
-	src="https://cdnjs.cloudflare.com/ajax/libs/TableExport/3.3.13/js/tableexport.min.js"></script>
+
+
 
 
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
