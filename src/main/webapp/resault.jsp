@@ -64,9 +64,21 @@
 		$('#exportdata').dataTable({
 			"bLengthChange" : true,
 			"scrollCollapse" : true,
-			"jQueryUI" : true,
-			dom : 'Bfrtip',
-			buttons : [ 'copyHtml5', 'excelHtml5', 'csvHtml5', 'print' ]
+			dom : 'lBfrtip',
+			buttons : [ 'copyHtml5', 'excelHtml5', 'csvHtml5', 'print' ],
+			"oLanguage" : {
+				"sLengthMenu" : " _MENU_ 筆/頁",
+				"sZeroRecords" : "找不到符合的資料。",
+				"sInfo" : "共 _MAX_ 頁",
+				"sSearch" : "搜尋",
+				"sInfoFiltered" : " - 找到 _TOTAL_ 筆 資料",
+				"sInfoEmpty" : "共 0 頁",
+				"oPaginate" : {
+					"sPrevious" : "«",
+					"sNext" : "»"
+				}
+			}
+
 		});
 		$('#exportdata_wrapper').find('a').trigger('click');
 	});
