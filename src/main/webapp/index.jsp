@@ -14,6 +14,8 @@
 			<h2>請在輸入欄上打入藥品名稱或健保碼以便查藥</h2>
 		</div>
 	</div>
+
+
 </body>
 <jsp:include page="/layout/foot.jsp" />
 </html>

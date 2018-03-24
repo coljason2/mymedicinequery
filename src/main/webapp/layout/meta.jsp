@@ -47,6 +47,4 @@ code {
 	font-size: 80%;
 }
 </style>
-<link href="jumbotron.css" rel="stylesheet">
-<link href="<%=request.getContextPath()%>/favicon.ico" rel="icon"
-	type="image/x-icon" />
+<link href="/resources/jumbotron.css" rel="stylesheet">
