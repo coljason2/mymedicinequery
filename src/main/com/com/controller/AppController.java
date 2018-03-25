@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.comman.MedEntity;
 import com.comman.getQuery;
@@ -42,7 +43,15 @@ public class AppController {
 		return "/resault";
 	}
 
+	@RequestMapping(value = "/get/{med}", method = RequestMethod.GET)
+	@ResponseBody
+	public List<MedEntity> GETQueryapi(@PathVariable("med") String med) throws UnsupportedEncodingException {
+		getMedicine(med);
+		return meds;
+	}
+
 	public void getMedicine(String med) throws UnsupportedEncodingException {
+		Log.info("med = {} ", new String(med.getBytes("ISO-8859-1"), "UTF-8"));
 		getQuery getmed = new getQuery();
 		medicine = new String(med.getBytes("ISO-8859-1"), "UTF-8");
 		meds = getmed.getMedicine(medicine);
