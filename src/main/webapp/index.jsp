@@ -13,6 +13,11 @@
 		<div class="jumbotron">
 			<h2>請在輸入欄上打入藥品名稱或健保碼以便查藥</h2>
 		</div>
+		<div class="jumbotron">
+			<h2>API Example</h2>
+			<h2>get/藥名</h2>
+			{ name: 藥名, isenough: 存量, oid: 是否健保, oidprice: 健保價 }
+		</div>
 	</div>
 
 

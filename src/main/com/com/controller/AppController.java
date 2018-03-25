@@ -37,7 +37,7 @@ public class AppController {
 
 	@RequestMapping(value = "/query/{med}", method = RequestMethod.GET)
 	public String GETQuery(@PathVariable("med") String med, Model model) throws UnsupportedEncodingException {
-		getMedicine(med);
+		getMedicine(new String(med.getBytes("ISO-8859-1"), "UTF-8"));
 		model.addAttribute("meds", meds);
 		model.addAttribute("querystring", medicine);
 		return "/resault";
@@ -46,14 +46,13 @@ public class AppController {
 	@RequestMapping(value = "/get/{med}", method = RequestMethod.GET)
 	@ResponseBody
 	public List<MedEntity> GETQueryapi(@PathVariable("med") String med) throws UnsupportedEncodingException {
-		getMedicine(med);
+		getMedicine(new String(med.getBytes("ISO-8859-1"), "UTF-8"));
 		return meds;
 	}
 
 	public void getMedicine(String med) throws UnsupportedEncodingException {
-		Log.info("med = {} ", new String(med.getBytes("ISO-8859-1"), "UTF-8"));
 		getQuery getmed = new getQuery();
-		medicine = new String(med.getBytes("ISO-8859-1"), "UTF-8");
+		medicine = med;
 		meds = getmed.getMedicine(medicine);
 	}
 }
