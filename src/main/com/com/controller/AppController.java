@@ -17,14 +17,20 @@ import com.comman.MedEntity;
 import com.comman.getQuery;
 
 @Controller
+@RequestMapping("/")
 public class AppController {
 	Logger Log = LoggerFactory.getLogger(AppController.class);
 	private String medicine;
 	List<MedEntity> meds;
 
-	@RequestMapping(value = { "/", "/home", "/index" }, method = RequestMethod.GET)
+	@RequestMapping(value = { "/login" }, method = RequestMethod.GET)
+	public String login(ModelMap model) {
+		return "/login";
+	}
+
+	@RequestMapping(value = { "/home", "/", "/index" }, method = RequestMethod.GET)
 	public String home(ModelMap model) {
-		return "/index";
+		return "/home";
 	}
 
 	@RequestMapping(value = "/query", method = RequestMethod.POST)

@@ -47,4 +47,4 @@ code {
 	font-size: 80%;
 }
 </style>
-<link href="/resources/jumbotron.css" rel="stylesheet">
+<link rel="stylesheet" href="<c:url value="/resources/jumbotron.css"/>">

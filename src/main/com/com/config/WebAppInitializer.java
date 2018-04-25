@@ -10,7 +10,7 @@ public class WebAppInitializer extends AbstractAnnotationConfigDispatcherServlet
 
 	@Override
 	protected Class<?>[] getRootConfigClasses() {
-		return new Class[] { AppConfig.class };
+		return new Class[] { AppConfig.class, SecurityConfiguration.class };
 	}
 
 	@Override
@@ -23,10 +23,12 @@ public class WebAppInitializer extends AbstractAnnotationConfigDispatcherServlet
 		return new String[] { "/" };
 	}
 
-	@Override
-	public void onStartup(ServletContext servletContext) throws ServletException {
-		super.onStartup(servletContext);
-		servletContext.addFilter("name", new CharacterEncodingFilter("UTF-8", true)).addMappingForUrlPatterns(null,
-				false, "/*");
-	}
+	// @Override
+	// public void onStartup(ServletContext servletContext) throws
+	// ServletException {
+	// super.onStartup(servletContext);
+	// servletContext.addFilter("name", new CharacterEncodingFilter("UTF-8",
+	// true)).addMappingForUrlPatterns(null,
+	// false, "/*");
+	// }
 }
