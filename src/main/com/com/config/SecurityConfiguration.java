@@ -17,9 +17,15 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
-		http.authorizeRequests().antMatchers("/", "/home", "/query", "/get/**", "/query/**").access("hasRole('USER')")
-				.and().formLogin().usernameParameter("username").passwordParameter("password").loginPage("/login")
-				.defaultSuccessUrl("/home").and().logout().logoutSuccessUrl("/login?logout").and()
-				.exceptionHandling().accessDeniedPage("/Access_Denied");
+		http.authorizeRequests().antMatchers("/resources/**", "/login").permitAll()
+				.antMatchers("/home", "/get/**", "/query/**").access("hasRole('USER')").and().httpBasic().and()
+				.formLogin().usernameParameter("username").passwordParameter("password").loginPage("/login")
+				.defaultSuccessUrl("/home").and().logout().logoutSuccessUrl("/login?logout").and().exceptionHandling()
+				.accessDeniedPage("/Access_Denied");
+//				.and().requiresChannel().antMatchers("/home", "/get/**", "/query/**").requiresSecure();
+		http.portMapper()
+				.http(80).mapsTo(443);
+		http.portMapper() 
+				.http(8080).mapsTo(443);
 	}
 }

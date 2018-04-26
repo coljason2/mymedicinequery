@@ -7,7 +7,7 @@
 <meta charset="UTF-8">
 <title>請登入</title>
 <link rel="stylesheet"
-	href="http://netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css">
+	href="<c:url value="/resources/bootstrap.min.css"/>">
 <link rel="stylesheet" href="<c:url value="/resources/style.css"/>">
 </head>
 <body>

@@ -23,12 +23,12 @@ public class AppController {
 	private String medicine;
 	List<MedEntity> meds;
 
-	@RequestMapping(value = { "/login" }, method = RequestMethod.GET)
+	@RequestMapping(value = { "/login", "/", "/index" }, method = RequestMethod.GET)
 	public String login(ModelMap model) {
 		return "/login";
 	}
 
-	@RequestMapping(value = { "/home", "/", "/index" }, method = RequestMethod.GET)
+	@RequestMapping(value = { "/home" }, method = RequestMethod.GET)
 	public String home(ModelMap model) {
 		return "/home";
 	}

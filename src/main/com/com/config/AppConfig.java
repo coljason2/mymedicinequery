@@ -10,6 +10,7 @@ import org.springframework.web.servlet.view.JstlView;
 @EnableWebMvc
 @Configuration
 @ComponentScan(basePackages = { "com.controller" })
+@Import({ SecurityConfiguration.class })
 public class AppConfig extends WebMvcConfigurerAdapter {
 
 	@Override
@@ -36,6 +37,7 @@ public class AppConfig extends WebMvcConfigurerAdapter {
 		viewResolver.setViewClass(JstlView.class);
 		viewResolver.setPrefix("/");
 		viewResolver.setSuffix(".jsp");
+		viewResolver.setRedirectHttp10Compatible(false);
 		registry.viewResolver(viewResolver);
 	}
 
