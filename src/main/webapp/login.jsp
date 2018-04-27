@@ -12,7 +12,8 @@
 </head>
 <body>
 	<div class="wrapper">
-		<form class="form-signin" method="post" action="login">
+		<form class="form-signin" method="post"
+			action="<c:url value="/signin"/>">
 			<h2 class="form-signin-heading">請登入</h2>
 			<input type="text" class="form-control" name="username"
 				placeholder="輸入帳號" required="" autofocus="" /> <input
@@ -21,6 +22,12 @@
 			</label> <input type="hidden" name="${_csrf.parameterName}"
 				value="${_csrf.token}" />
 			<button class="btn btn-lg btn-primary btn-block" type="submit">登入</button>
+			<br />
+			<c:if test="${not empty sessionScope.message}">
+				<span style="color: green"><c:out
+						value="${sessionScope.message}" /></span>
+				<c:remove var="message" scope="session" />
+			</c:if>
 		</form>
 	</div>
 </body>
