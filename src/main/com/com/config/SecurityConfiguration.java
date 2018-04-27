@@ -8,10 +8,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
-
-import com.filter.ForceToHttps;
-
 
 @EnableWebSecurity
 @Configuration
@@ -63,9 +59,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 				.and()
 				.exceptionHandling()
 				.accessDeniedPage("/Access_Denied")
-				 .and()
-				 .csrf().disable();;
-//				.and().requiresChannel().antMatchers("/home", "/get/**", "/query/**").requiresSecure();
+				.and()
+				.csrf().disable();;
 	}
 	
 }

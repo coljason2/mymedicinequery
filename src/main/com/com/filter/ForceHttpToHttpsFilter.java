@@ -12,8 +12,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ForceToHttps implements Filter {
-	private static Logger Logger = LoggerFactory.getLogger(ForceToHttps.class);
+public class ForceHttpToHttpsFilter implements Filter {
+	private static Logger Logger = LoggerFactory.getLogger(ForceHttpToHttpsFilter.class);
 	public static final String X_FORWARDED_PROTO = "x-forwarded-proto";
 	private FilterConfig filterConfig;
 

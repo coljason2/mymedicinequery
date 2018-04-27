@@ -6,7 +6,7 @@ import javax.servlet.ServletException;
 
 import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
 
-import com.filter.ForceToHttps;
+import com.filter.ForceHttpToHttpsFilter;
 
 public class WebAppInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
 
@@ -28,6 +28,6 @@ public class WebAppInitializer extends AbstractAnnotationConfigDispatcherServlet
 	@Override
 	public void onStartup(ServletContext servletContext) throws ServletException {
 		super.onStartup(servletContext);
-		servletContext.addFilter("ForceToHttps", ForceToHttps.class).addMappingForUrlPatterns(null, false, "/*");
+		servletContext.addFilter("ForceToHttps", ForceHttpToHttpsFilter.class).addMappingForUrlPatterns(null, false, "/*");
 	}
 }
