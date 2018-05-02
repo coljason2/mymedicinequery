@@ -4,7 +4,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>藥品查詢</title>
 <link rel="stylesheet"
 	href="<c:url value="/resources/bootstrap.min.css"/>">
@@ -23,10 +23,12 @@
 			<button class="btn btn-lg btn-primary btn-block" type="submit">登入</button>
 			<br />
 			<c:if test="${not empty sessionScope.message}">
-				<span style="color: green"><c:out
+				<span style="color: red"><c:out
 						value="${sessionScope.message}" /></span>
 				<c:remove var="message" scope="session" />
+				<br>
 			</c:if>
+			<span style="color: green">測試帳號密碼：test</span>
 		</form>
 	</div>
 </body>
