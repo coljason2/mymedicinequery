@@ -47,7 +47,7 @@
 							</c:when>
 								<c:otherwise>
 									<a
-										href="https://www.nhi.gov.tw/query/query1_list.aspx?Q1ID=${item.oid}"
+										href="https://www.nhi.gov.tw/QueryN/Query1_Print.aspx?Q1ID=${item.oid}"
 										target="_blank">${item.oid}</a>
 								</c:otherwise>
 							</c:choose></td>
@@ -71,7 +71,7 @@
 				"sInfo" : "共 _MAX_ 頁",
 				"sSearch" : "搜尋",
 				"sInfoFiltered" : " - 找到 _TOTAL_ 筆 資料",
-				"sInfoEmpty" : "共 0 頁",
+				"sInfoEmpty" : "共 0 筆",
 				"oPaginate" : {
 					"sPrevious" : "«",
 					"sNext" : "»"
