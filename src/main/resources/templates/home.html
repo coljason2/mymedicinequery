@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="components/header :: header"></head>
+<nav class="navbar navbar-inverse navbar-fixed-top" th:include="components/nav :: nav"></nav>
+<body>
+<!-- Main jumbotron for a primary marketing message or call to action -->
+<div class="container">
+    <div class="jumbotron">
+        <h2>請在輸入欄上打入藥品名稱或健保碼以便查藥</h2>
+    </div>
+    <div class="jumbotron">
+        <h2>API Example</h2>
+        <h2>get/藥名</h2>
+        { name: 藥名, isenough: 存量, oid: 是否健保, oidprice: 健保價 }
+        <h2><a href="/swagger-ui.html" target="_blank">API 文件說明</a></h2>
+    </div>
+</div>
+<footer class="footer" th:include="components/footer :: footer"></footer>
+</body>
+</html>

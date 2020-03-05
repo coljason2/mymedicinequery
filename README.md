@@ -1,1 +1,6 @@
-# mymedicinequery
+# 查藥爬蟲系統
+
+### 說明
+以Spring Boot開發串接Heroku，主要從嘉鏵藥品網站將藥品相關資訊爬下來，呈現在畫面上，針對每項藥品可以超連結至健保局公開資訊，也支援CSV/EXCEL/PDF匯出，支援RESTFul API 方法，以及連結健保網頁。
+
+
