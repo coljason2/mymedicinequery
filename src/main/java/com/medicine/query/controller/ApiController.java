@@ -1,5 +1,6 @@
 package com.medicine.query.controller;
 
+import com.medicine.query.exception.MedException;
 import com.medicine.query.model.MedEntity;
 import com.medicine.query.service.MedicineService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,10 @@ public class ApiController {
 
     @GetMapping(value = "/get/{med}")
     public List<MedEntity> getMedicine(@PathVariable("med") String med) {
-        return medicineService.getMedicine(med);
+        try {
+            return medicineService.getMedicine(med);
+        } catch (Exception e) {
+            throw new MedException(e);
+        }
     }
 }

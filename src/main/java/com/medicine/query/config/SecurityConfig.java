@@ -15,7 +15,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     public void configure(WebSecurity web) {
-        web.ignoring().antMatchers("/webjars/**");
+//        web.ignoring().antMatchers("/webjars/**");
         web.ignoring().antMatchers("/v2/api-docs/**");
         web.ignoring().antMatchers("/swagger.json");
         web.ignoring().antMatchers("/swagger-ui.html");
@@ -27,8 +27,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 "/favicon.ico",
                 "/**/*.html",
                 "/**/*.css",
-                "/**/*.js",
-                "/actuator/**"
+                "/**/*.js"
         );
     }
 

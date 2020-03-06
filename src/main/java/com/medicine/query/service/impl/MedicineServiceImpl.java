@@ -1,10 +1,12 @@
 package com.medicine.query.service.impl;
 
 
+import com.medicine.query.exception.MedException;
 import com.medicine.query.model.LoginFormData;
 import com.medicine.query.model.MedEntity;
 import com.medicine.query.service.MedicineService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -34,6 +36,11 @@ public class MedicineServiceImpl implements MedicineService {
 
     @Override
     public List<MedEntity> getMedicine(String name) {
+
+        if (StringUtils.isBlank(name)) {
+            throw new MedException("查詢空白");
+        }
+
         String cookie = getCookies();
         List<MedEntity> meds = new ArrayList<MedEntity>();
         // clean code
@@ -48,10 +55,10 @@ public class MedicineServiceImpl implements MedicineService {
                 parseString = decode(getContextPage(name, cookie, i).replace("\\//", "")).replace("\\", "")
                         .replace("}", "").replace("{", "").replace("rn", "");
                 resault = Jsoup.parse(parseString);
-                setResponseEntities(meds, resault);
+                this.setResponseEntities(meds, resault);
             }
         } else {
-            setResponseEntities(meds, resault);
+            this.setResponseEntities(meds, resault);
         }
         return meds;
     }
@@ -76,6 +83,7 @@ public class MedicineServiceImpl implements MedicineService {
             connection.disconnect();
         } catch (Exception e) {
             log.error("Getcontext Error ", e);
+            throw new MedException(e);
         }
         return context;
     }
@@ -99,7 +107,8 @@ public class MedicineServiceImpl implements MedicineService {
             reader.close();
             connection.disconnect();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Getcontext Error ", e);
+            throw new MedException(e);
         }
         return context;
     }
@@ -128,6 +137,7 @@ public class MedicineServiceImpl implements MedicineService {
 
         } catch (IOException e) {
             log.error("getCookies Error ", e);
+            throw new MedException(e);
         }
         for (String cookie : cookies.keySet()) {
             cookiePara = cookiePara + cookie.toString() + "=" + cookies.get(cookie) + ";";

@@ -6,6 +6,9 @@
 <div class="container">
     <div class="jumbotron">
         <h2>網頁錯誤@@!請重新查詢</h2>
+        <h2 th:text="${url}"/>
+        <h2 th:text="${ex}"/>
+        <a href="/" class="btn btn-primary">Back Home</a>
     </div>
 </div>
 <footer class="footer" th:include="components/footer :: footer"></footer>

@@ -6,13 +6,13 @@ import java.util.List;
 
 public interface MedicineService {
 
-    List<MedEntity> getMedicine(String name);
+    List<MedEntity> getMedicine(String name) throws Exception;
 
-    String getContext(String name, String cookiePara);
+    String getContext(String name, String cookiePara) throws Exception;
 
-    String getContextPage(String name, String cookiePara, int Now_page);
+    String getContextPage(String name, String cookiePara, int Now_page) throws Exception;
 
-    String decode(String s);
+    String decode(String s) throws Exception;
 
-    String getCookies();
+    String getCookies() throws Exception;
 }
