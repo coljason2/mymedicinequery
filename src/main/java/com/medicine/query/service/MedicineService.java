@@ -2,6 +2,7 @@ package com.medicine.query.service;
 
 import com.medicine.query.model.MedEntity;
 
+import java.io.ByteArrayInputStream;
 import java.util.List;
 
 public interface MedicineService {
@@ -15,4 +16,6 @@ public interface MedicineService {
     String decode(String s) throws Exception;
 
     String getCookies() throws Exception;
+
+    ByteArrayInputStream medsReport(List<MedEntity> meds);
 }

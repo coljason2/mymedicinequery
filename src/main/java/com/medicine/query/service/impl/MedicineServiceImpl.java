@@ -1,6 +1,13 @@
 package com.medicine.query.service.impl;
 
 
+import com.itextpdf.text.Font;
+import com.itextpdf.text.FontFactory;
+import com.itextpdf.text.Phrase;
+import com.itextpdf.text.pdf.BaseFont;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfWriter;
 import com.medicine.query.exception.MedException;
 import com.medicine.query.model.LoginFormData;
 import com.medicine.query.model.MedEntity;
@@ -13,9 +20,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Service;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -144,6 +149,75 @@ public class MedicineServiceImpl implements MedicineService {
         }
         // log.info(cookiePara.toString());
         return cookiePara;
+    }
+
+    @Override
+    public ByteArrayInputStream medsReport(List<MedEntity> meds) {
+        com.itextpdf.text.Document document = new com.itextpdf.text.Document();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try {
+
+            PdfPTable table = new PdfPTable(4);
+            table.setWidthPercentage(105);
+            table.setWidths(new int[]{4, 3, 2, 2});
+
+            BaseFont bfChinese = BaseFont.createFont("MHei-Medium", "UniCNS-UCS2-H", BaseFont.NOT_EMBEDDED);
+            Font defaultFont = new Font(bfChinese, 12, 0);
+            Font font = defaultFont;
+
+            PdfPCell hcell;
+            hcell = new PdfPCell(new Phrase("藥名", font));
+            hcell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
+            table.addCell(hcell);
+
+            hcell = new PdfPCell(new Phrase("藥價/庫存", font));
+            hcell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
+            table.addCell(hcell);
+
+            hcell = new PdfPCell(new Phrase("健保碼", font));
+            hcell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
+            table.addCell(hcell);
+
+            hcell = new PdfPCell(new Phrase("健保價", font));
+            hcell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
+            table.addCell(hcell);
+
+            for (MedEntity med : meds) {
+
+                PdfPCell cell;
+
+                cell = new PdfPCell(new Phrase(med.getName(), font));
+                cell.setVerticalAlignment(com.itextpdf.text.Element.ALIGN_MIDDLE);
+                cell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
+                table.addCell(cell);
+
+                cell = new PdfPCell(new Phrase(med.getIsEnough(), font));
+                cell.setVerticalAlignment(com.itextpdf.text.Element.ALIGN_MIDDLE);
+                cell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
+                table.addCell(cell);
+
+                cell = new PdfPCell(new Phrase(String.valueOf(med.getOid()), font));
+                cell.setVerticalAlignment(com.itextpdf.text.Element.ALIGN_MIDDLE);
+                cell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
+                table.addCell(cell);
+
+                cell = new PdfPCell(new Phrase(String.valueOf(med.getOidPrice()), font));
+                cell.setVerticalAlignment(com.itextpdf.text.Element.ALIGN_MIDDLE);
+                cell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
+                table.addCell(cell);
+            }
+
+            PdfWriter.getInstance(document, out);
+            document.open();
+            document.add(table);
+
+            document.close();
+
+        } catch (Exception ex) {
+            log.error("Error occurred: {0}", ex);
+        }
+
+        return new ByteArrayInputStream(out.toByteArray());
     }
 
     private void setResponseEntities(List<MedEntity> meds, Document resault) {
