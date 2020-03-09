@@ -18,4 +18,6 @@ public interface MedicineService {
     String getCookies() throws Exception;
 
     ByteArrayInputStream medsReport(List<MedEntity> meds);
+
+    String createQRcode(List<MedEntity> meds);
 }

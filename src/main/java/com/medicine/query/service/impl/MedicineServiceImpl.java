@@ -1,23 +1,27 @@
 package com.medicine.query.service.impl;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itextpdf.text.Font;
-import com.itextpdf.text.FontFactory;
 import com.itextpdf.text.Phrase;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.medicine.query.exception.MedException;
+import com.medicine.query.model.IbonRsp;
 import com.medicine.query.model.LoginFormData;
 import com.medicine.query.model.MedEntity;
+import com.medicine.query.model.UpPdfRsp;
 import com.medicine.query.service.MedicineService;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -27,6 +31,7 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,8 +41,15 @@ import java.util.regex.Pattern;
 public class MedicineServiceImpl implements MedicineService {
 
     static final String getdrug = "http://www.chahwa.com.tw/order.php?act=query&&drug=";
+    static final String uploadPath = "https://printadmin.ibon.com.tw/IbonUpload/IbonUpload/LocalFileUpload";
+    static final String postPath = "https://printadmin.ibon.com.tw/IbonUpload/IbonUpload/IbonFileUpload";
     static final Pattern reUnicode = Pattern.compile("\\\\u([0-9a-zA-Z]{4})");
     static final LoginFormData form = new LoginFormData();
+    private final OkHttpClient client = new OkHttpClient();
+
+    @Autowired
+    ObjectMapper mapper;
+
 
     @Override
     public List<MedEntity> getMedicine(String name) {
@@ -153,6 +165,62 @@ public class MedicineServiceImpl implements MedicineService {
 
     @Override
     public ByteArrayInputStream medsReport(List<MedEntity> meds) {
+        return new ByteArrayInputStream(this.createPdfOutputStream(meds).toByteArray());
+    }
+
+    @Override
+    public String createQRcode(List<MedEntity> meds) {
+
+        String hash = UUID.randomUUID().toString();
+        RequestBody fileBody = RequestBody.create(this.createPdfOutputStream(meds).toByteArray(), MediaType.parse("pdf"));
+        RequestBody requestBody = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM).addFormDataPart("file", "", fileBody)
+                .addFormDataPart("fileName", "meds.pdf")
+                .addFormDataPart("hash", hash)
+                .build();
+        Request request = new Request.Builder()
+                .url(uploadPath)
+                .post(requestBody)
+                .build();
+
+
+        UpPdfRsp respEntity = null;
+        IbonRsp ibonResp = null;
+        Response response = null;
+        String jsonString = null;
+        try {
+            response = client.newCall(request).execute();
+            jsonString = response.body().string().toLowerCase();
+            respEntity = mapper.readValue(jsonString, UpPdfRsp.class);
+            log.info("respEntity = {} ", respEntity);
+            if ("00".equals(respEntity.getResultcode())) {
+                RequestBody formBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
+                        .addFormDataPart("hash", respEntity.getHash())
+                        .addFormDataPart("user", "zzshcool")
+                        .addFormDataPart("email", "zzshcool@gmail.com")
+                        .build();
+
+                Request postReq = new Request.Builder()
+                        .url(postPath)
+                        .post(requestBody)
+                        .build();
+
+                response = client.newCall(postReq).execute();
+                jsonString = response.body().string().toLowerCase();
+                ibonResp = mapper.readValue(jsonString.toLowerCase(), IbonRsp.class);
+
+            } else {
+                throw new MedException("檔案上傳錯誤!!!");
+            }
+
+            return jsonString;
+        } catch (Exception e) {
+            log.error("upload Exception ", e);
+        }
+        return null;
+    }
+
+    private ByteArrayOutputStream createPdfOutputStream(List<MedEntity> meds) {
         com.itextpdf.text.Document document = new com.itextpdf.text.Document();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         try {
@@ -216,8 +284,7 @@ public class MedicineServiceImpl implements MedicineService {
         } catch (Exception ex) {
             log.error("Error occurred: {0}", ex);
         }
-
-        return new ByteArrayInputStream(out.toByteArray());
+        return out;
     }
 
     private void setResponseEntities(List<MedEntity> meds, Document resault) {
@@ -230,4 +297,6 @@ public class MedicineServiceImpl implements MedicineService {
             meds.add(m);
         }
     }
+
+
 }
