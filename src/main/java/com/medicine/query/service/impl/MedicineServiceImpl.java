@@ -16,6 +16,7 @@ import com.medicine.query.model.UpPdfRsp;
 import com.medicine.query.service.MedicineService;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
+import okhttp3.Headers.Builder;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
@@ -200,8 +201,20 @@ public class MedicineServiceImpl implements MedicineService {
                         .addFormDataPart("email", "zzshcool@gmail.com")
                         .build();
 
+                Headers headers = new Headers.Builder()
+                        .add("accept-encoding", "gzip, deflate, br")
+                        .add("accept-language", "zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7")
+                        .add("content-type", "application/x-www-form-urlencoded; charset=UTF-8")
+                        .add("sec-fetch-dest", "empty")
+                        .add("sec-fetch-mode", "cors")
+                        .add("sec-fetch-site", "same-site")
+                        .add("accept", "/*")
+                        .add("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.122 Safari/537.36")
+                        .build();
+
                 Request postReq = new Request.Builder()
                         .url(postPath)
+                        .headers(headers)
                         .post(requestBody)
                         .build();
 
