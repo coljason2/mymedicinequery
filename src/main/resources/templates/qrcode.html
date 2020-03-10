@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:c="http://www.w3.org/1999/XSL/Transform">
+<html lang="en">
+<head>
+    <div th:include="components/header :: header"/>
+    <title th:text="'【'+${querystring}+'】列印碼'"/>
+</head>
+<nav class="navbar navbar-inverse navbar-fixed-top" th:include="components/nav :: nav"></nav>
+<body>
+<div class="container">
+    <h2>列印碼：<span th:text="${fileNumber}"/></h2>
+    <img width="200" height="200" th:src="'data:text/plain;charset=ISO-8859-1;base64,'+${fileCode}">
+</div>
+<footer class="footer" th:include="components/footer :: footer"></footer>
+</body>
+</html>

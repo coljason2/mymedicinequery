@@ -1,5 +1,6 @@
 package com.medicine.query.service;
 
+import com.medicine.query.model.IbonRsp;
 import com.medicine.query.model.MedEntity;
 
 import java.io.ByteArrayInputStream;
@@ -19,5 +20,5 @@ public interface MedicineService {
 
     ByteArrayInputStream medsReport(List<MedEntity> meds);
 
-    String createQRcode(List<MedEntity> meds);
+    IbonRsp createQRcode(List<MedEntity> meds);
 }

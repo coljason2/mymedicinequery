@@ -170,7 +170,7 @@ public class MedicineServiceImpl implements MedicineService {
     }
 
     @Override
-    public String createQRcode(List<MedEntity> meds) {
+    public IbonRsp createQRcode(List<MedEntity> meds) {
 
         String hash = UUID.randomUUID().toString();
         RequestBody fileBody = RequestBody.create(this.createPdfOutputStream(meds).toByteArray(), MediaType.parse("pdf"));
@@ -215,7 +215,7 @@ public class MedicineServiceImpl implements MedicineService {
                 Request postReq = new Request.Builder()
                         .url(postPath)
                         .headers(headers)
-                        .post(requestBody)
+                        .post(formBody)
                         .build();
 
                 response = client.newCall(postReq).execute();
@@ -225,8 +225,8 @@ public class MedicineServiceImpl implements MedicineService {
             } else {
                 throw new MedException("檔案上傳錯誤!!!");
             }
-
-            return jsonString;
+            log.info("ibonResp = {} ", ibonResp);
+            return ibonResp;
         } catch (Exception e) {
             log.error("upload Exception ", e);
         }

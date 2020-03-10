@@ -1,6 +1,7 @@
 package com.medicine.query.controller;
 
 import com.medicine.query.exception.MedException;
+import com.medicine.query.model.IbonRsp;
 import com.medicine.query.model.MedEntity;
 import com.medicine.query.service.MedicineService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,8 +24,4 @@ public class ApiController {
         }
     }
 
-    @GetMapping(value = "/qrcode")
-    public String createQRprint(@RequestParam String querystring) throws Exception {
-        return medicineService.createQRcode(medicineService.getMedicine(querystring));
-    }
 }
