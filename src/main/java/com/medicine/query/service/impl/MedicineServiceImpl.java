@@ -1,6 +1,7 @@
 package com.medicine.query.service.impl;
 
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itextpdf.text.Font;
 import com.itextpdf.text.Phrase;
@@ -16,7 +17,6 @@ import com.medicine.query.model.UpPdfRsp;
 import com.medicine.query.service.MedicineService;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
-import okhttp3.Headers.Builder;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
@@ -186,7 +186,7 @@ public class MedicineServiceImpl implements MedicineService {
 
 
         UpPdfRsp respEntity = null;
-        IbonRsp ibonResp = null;
+        IbonRsp ibonResp = new IbonRsp();
         Response response = null;
         String jsonString = null;
         try {
@@ -219,8 +219,10 @@ public class MedicineServiceImpl implements MedicineService {
                         .build();
 
                 response = client.newCall(postReq).execute();
-                jsonString = response.body().string().toLowerCase();
-                ibonResp = mapper.readValue(jsonString.toLowerCase(), IbonRsp.class);
+                JsonNode rootNode = mapper.readTree(response.body().string());
+                log.info("jsonString = {} ", jsonString);
+                ibonResp.setPincode(rootNode.get("Pincode").asText());
+                ibonResp.setFileqrcode(rootNode.get("FileQrcode").asText());
 
             } else {
                 throw new MedException("檔案上傳錯誤!!!");

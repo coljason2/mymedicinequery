@@ -51,8 +51,6 @@
             <artifactId>okhttp</artifactId>
             <version>4.4.0</version>
         </dependency>
-
-
         <!--Swagger -->
         <dependency>
             <groupId>io.springfox</groupId>

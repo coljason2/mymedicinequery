@@ -9,8 +9,24 @@
 <body>
 <div class="container">
     <h2>列印碼：<span th:text="${fileNumber}"/></h2>
-    <img width="200" height="200" th:src="'data:text/plain;charset=ISO-8859-1;base64,'+${fileCode}">
+    <img width="150" height="150" th:src="'data:text/plain;base64,'+${fileCode}"/>
 </div>
 <footer class="footer" th:include="components/footer :: footer"></footer>
+<script src="https://rawgit.com/cirocosta/qcode-decoder/master/build/qcode-decoder.min.js"></script>
+<script>
+    var img = document.querySelector('img');
+    var canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    var ctx = canvas.getContext('2d');
+    // rotate by 90 deg
+    ctx.rotate(Math.PI);
+    ctx.translate(-img.width, -img.height);
+    ctx.drawImage(img, 0, 0);
+    // decode
+    QCodeDecoder().decodeFromImage(canvas.toDataURL(), function (err, res) {
+        document.body.appendChild(document.createTextNode(res || err))
+    });
+</script>
 </body>
 </html>
