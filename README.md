@@ -1,6 +1,20 @@
 # 查藥爬蟲系統
+## 環境
+* Spring Boot 
+* Heroku
 
-### 說明
-以Spring Boot開發串接Heroku，主要從嘉鏵藥品網站將藥品相關資訊爬下來，呈現在畫面上，針對每項藥品可以超連結至健保局公開資訊，也支援CSV/EXCEL/PDF匯出，支援RESTFul API 方法，以及連結健保網頁。
+## 專案說明
+* 以Spring Boot開發串接Heroku，主要從嘉鏵藥品網站將藥品相關資訊爬下來。
+* 功能介紹：
+    * 查詢藥品資訊
+    * 7-11上傳列印串接
+    * PDF/CSV匯出
+    * 健保網頁查詢
+    * Swagger API 支援
 
+## Demo 頁面
+* https://mymedicinequery.herokuapp.com/
+* 帳號密碼 root/root
 
+##Swagger API 測試
+* https://mymedicinequery.herokuapp.com/swagger-ui.html
