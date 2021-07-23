@@ -26,10 +26,7 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -230,6 +227,17 @@ public class MedicineServiceImpl implements MedicineService {
             log.error("upload Exception ", e);
         }
         return null;
+    }
+
+    @Override
+    public List<MedEntity> getMedicineByList(String strList) {
+        List<String> namesList = Arrays.asList(strList.split(","));
+        List<MedEntity> list = new ArrayList<>();
+        for (String company : namesList) {
+            list.addAll(this.getMedicine(company));
+        }
+        log.info("list :{} ", list);
+        return list;
     }
 
 

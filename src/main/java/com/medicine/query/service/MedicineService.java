@@ -22,4 +22,5 @@ public interface MedicineService {
 
     IbonRsp createQRcode(List<MedEntity> meds);
 
+    List<MedEntity> getMedicineByList(String strList);
 }
