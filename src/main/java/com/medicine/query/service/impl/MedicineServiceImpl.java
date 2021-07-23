@@ -10,10 +10,7 @@ import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.medicine.query.exception.MedException;
-import com.medicine.query.model.IbonRsp;
-import com.medicine.query.model.LoginFormData;
-import com.medicine.query.model.MedEntity;
-import com.medicine.query.model.UpPdfRsp;
+import com.medicine.query.model.*;
 import com.medicine.query.service.MedicineService;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
@@ -234,6 +231,7 @@ public class MedicineServiceImpl implements MedicineService {
         }
         return null;
     }
+
 
     private ByteArrayOutputStream createPdfOutputStream(List<MedEntity> meds) {
         com.itextpdf.text.Document document = new com.itextpdf.text.Document();

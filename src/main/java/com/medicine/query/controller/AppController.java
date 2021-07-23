@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.validation.constraints.NotNull;
 import java.io.ByteArrayInputStream;
+import java.util.Arrays;
+import java.util.List;
 
 @Slf4j
 @Controller
@@ -27,7 +29,12 @@ import java.io.ByteArrayInputStream;
 public class AppController {
 
     @Autowired
-    MedicineService medicineService;
+    private MedicineService medicineService;
+
+    private static List<String> medCompanys = Arrays.asList(new String[]{"邁蘭", "衛達", "友華", "福元", "意欣", "一成", "陽生", "皇佳", "黃氏"
+            , "國嘉", "新瑞", "泰宗", "鼎泰", "井田", "天義", "衛肯", "順華", "鴻文", "星寶", "曼哈頓", "南光", "永勝", "韋淳", "拜耳", "海喬", "益普生", "幸生", "永茂", "西海", "柏理"
+            , "榮民", "羅得", "應元", "元宙", "五洲", "華興", "中化", "信東", "瑪科隆", "政德", "武田"
+    });
 
     @RequestMapping(value = {"/login", "/index"}, method = RequestMethod.GET)
     public String login(ModelMap model) {
@@ -36,12 +43,14 @@ public class AppController {
 
     @RequestMapping(value = {"/home", "/", "/index"}, method = RequestMethod.GET)
     public String home(ModelMap model) {
+        model.addAttribute("medCompanys", medCompanys);
         return "home";
     }
 
     @RequestMapping(value = "/query", method = RequestMethod.POST)
     public String POSTQuery(@RequestParam String querystring, Model model) {
         try {
+            log.info("querystring :{}", querystring);
             model.addAttribute("meds", medicineService.getMedicine(querystring));
         } catch (Exception e) {
             throw new MedException(e);

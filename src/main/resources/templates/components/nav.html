@@ -1,16 +1,28 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <nav class="navbar navbar-inverse navbar-fixed-top" th:fragment="nav">
-
     <div class="container">
         <div class="navbar-header">
             <a class="navbar-brand" href="/home">藥品查詢</a>
             <form class="navbar-form navbar-left" action="query" method="POST">
                 <div class="input-group">
-                    <input type="text" name="querystring" placeholder="輸入要查詢藥名"
+                    <input type="text" name="querystring" placeholder="輸入要查詢(藥名/公司)"
                            class="form-control"> <span class="input-group-btn">
 						<button id="submit" type="submit" class="btn btn-success">查詢</button>
 					</span> <input type="hidden" name="${_csrf.parameterName}"
+                                   value="{_csrf.token}"/>
+                </div>
+            </form>
+
+            <a class="navbar-brand" href="/home">藥品公司查詢</a>
+            <form class="navbar-form navbar-left" action="query" method="POST">
+                <div class="input-group mb-3">
+                    <select class="custom-select" name="querystring" multiple="multiple" id="inputGroupSelect03">
+                        <option th:each="item:${medCompanys}" th:value="${item}" th:text="${item}">
+                        </option>
+                    </select>
+                    <button id="submit" type="submit" class="btn btn-success">查詢</button>
+                    </span> <input type="hidden" name="${_csrf.parameterName}"
                                    value="{_csrf.token}"/>
                 </div>
             </form>
@@ -22,6 +34,15 @@
                 <button id="submit" type="submit" class="btn btn-info">登出</button>
             </form>
         </div>
-    </div>
 
+
+        <script>
+            $(document).ready(function () {
+                $('.custom-select').select2({
+                    tags: true,
+                    tokenSeparators: [',', ' ']
+                });
+            });
+        </script>
+    </div>
 </nav>

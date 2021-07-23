@@ -21,4 +21,5 @@ public interface MedicineService {
     ByteArrayInputStream medsReport(List<MedEntity> meds);
 
     IbonRsp createQRcode(List<MedEntity> meds);
+
 }
