@@ -17,7 +17,7 @@
             <a class="navbar-brand" href="/home">藥品公司查詢</a>
             <form class="navbar-form navbar-left" action="query/list" method="POST">
                 <div class="input-group">
-                    <select class="custom-select" name="querystring" multiple="multiple" id="inputGroupSelect03">
+                    <select class="custom-select" name="querystring" multiple="multiple" style="width:200px;">
                         <option th:each="item:${medCompanys}" th:value="${item}" th:text="${item}">
                         </option>
                     </select>
