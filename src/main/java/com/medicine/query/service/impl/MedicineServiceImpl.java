@@ -3,7 +3,9 @@ package com.medicine.query.service.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Font;
+import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.Phrase;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfPCell;
@@ -47,16 +49,16 @@ public class MedicineServiceImpl implements MedicineService {
 
 
     @Override
-    public List<MedEntity> getMedicine(String name) {
+    public List<MedEntity> getMedicine(String queryName) {
 
-        if (StringUtils.isBlank(name)) {
+        if (StringUtils.isBlank(queryName)) {
             throw new MedException("查詢空白");
         }
 
         String cookie = getCookies();
         List<MedEntity> meds = new ArrayList<MedEntity>();
         // clean code
-        String parseString = decode(getContext(name, cookie).replace("\\//", "")).replace("\\", "").replace("}", "")
+        String parseString = decode(getContext(queryName, cookie).replace("\\//", "")).replace("\\", "").replace("}", "")
                 .replace("{", "").replace("rn", "");
         Document resault = Jsoup.parse(parseString);
         int total_page = Integer
@@ -64,13 +66,13 @@ public class MedicineServiceImpl implements MedicineService {
         log.info("total_page = {}", total_page);
         if (total_page > 1) {
             for (int i = 1; i <= total_page; i++) {
-                parseString = decode(getContextPage(name, cookie, i).replace("\\//", "")).replace("\\", "")
+                parseString = decode(getContextPage(queryName, cookie, i).replace("\\//", "")).replace("\\", "")
                         .replace("}", "").replace("{", "").replace("rn", "");
                 resault = Jsoup.parse(parseString);
-                this.setResponseEntities(meds, resault);
+                this.setResponseEntities(meds, resault, queryName);
             }
         } else {
-            this.setResponseEntities(meds, resault);
+            this.setResponseEntities(meds, resault, queryName);
         }
         return meds;
     }
@@ -236,6 +238,7 @@ public class MedicineServiceImpl implements MedicineService {
         for (String company : namesList) {
             list.addAll(this.getMedicine(company));
         }
+        Collections.sort(list, new MedEntity());
         log.info("list :{} ", list);
         return list;
     }
@@ -244,34 +247,29 @@ public class MedicineServiceImpl implements MedicineService {
     private ByteArrayOutputStream createPdfOutputStream(List<MedEntity> meds) {
         com.itextpdf.text.Document document = new com.itextpdf.text.Document();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
+
         try {
 
-            PdfPTable table = new PdfPTable(4);
-            table.setWidthPercentage(105);
-            table.setWidths(new int[]{4, 3, 2, 2});
+            PdfPTable table = this.createTable();
 
             BaseFont bfChinese = BaseFont.createFont("MHei-Medium", "UniCNS-UCS2-H", BaseFont.NOT_EMBEDDED);
             Font defaultFont = new Font(bfChinese, 12, 0);
             Font font = defaultFont;
+            PdfWriter.getInstance(document, out);
 
-            PdfPCell hcell;
-            hcell = new PdfPCell(new Phrase("藥名", font));
-            hcell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
-            table.addCell(hcell);
-
-            hcell = new PdfPCell(new Phrase("藥價/庫存", font));
-            hcell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
-            table.addCell(hcell);
-
-            hcell = new PdfPCell(new Phrase("健保碼", font));
-            hcell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
-            table.addCell(hcell);
-
-            hcell = new PdfPCell(new Phrase("健保價", font));
-            hcell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
-            table.addCell(hcell);
-
+            document.open();
+            String preCompany = meds.get(0).getCompany();
+            Paragraph title = new Paragraph("【" + meds.get(0).getCompany() + "】", new Font(bfChinese, 20, 0));
             for (MedEntity med : meds) {
+
+                if (!med.getCompany().equals(preCompany)) {
+                    document.add(title);
+                    document.add(new Paragraph(" ", font));
+                    document.add(table);
+                    document.newPage();
+                    title = new Paragraph("【" + med.getCompany() + "】", new Font(bfChinese, 20, 0));
+                    table = this.createTable();
+                }
 
                 PdfPCell cell;
 
@@ -294,12 +292,14 @@ public class MedicineServiceImpl implements MedicineService {
                 cell.setVerticalAlignment(com.itextpdf.text.Element.ALIGN_MIDDLE);
                 cell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
                 table.addCell(cell);
+
+                preCompany = med.getCompany();
+
             }
 
-            PdfWriter.getInstance(document, out);
-            document.open();
+            document.add(title);
+            document.add(new Paragraph(" ", font));
             document.add(table);
-
             document.close();
 
         } catch (Exception ex) {
@@ -308,13 +308,42 @@ public class MedicineServiceImpl implements MedicineService {
         return out;
     }
 
-    private void setResponseEntities(List<MedEntity> meds, Document resault) {
+    private PdfPTable createTable() throws DocumentException, IOException {
+        PdfPTable table = new PdfPTable(4);
+        table.setWidthPercentage(105);
+        table.setWidths(new int[]{4, 3, 2, 2});
+
+        BaseFont bfChinese = BaseFont.createFont("MHei-Medium", "UniCNS-UCS2-H", BaseFont.NOT_EMBEDDED);
+        Font defaultFont = new Font(bfChinese, 12, 0);
+        Font font = defaultFont;
+
+        PdfPCell hcell;
+        hcell = new PdfPCell(new Phrase("藥名", font));
+        hcell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
+        table.addCell(hcell);
+
+        hcell = new PdfPCell(new Phrase("藥價/庫存", font));
+        hcell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
+        table.addCell(hcell);
+
+        hcell = new PdfPCell(new Phrase("健保碼", font));
+        hcell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
+        table.addCell(hcell);
+
+        hcell = new PdfPCell(new Phrase("健保價", font));
+        hcell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
+        table.addCell(hcell);
+        return table;
+    }
+
+    private void setResponseEntities(List<MedEntity> meds, Document resault, String company) {
         for (Element n : resault.getElementsByClass("item_text")) {
             MedEntity m = new MedEntity();
             m.setOid(n.getElementsByClass("code").text());
             m.setOidPrice(n.getElementsByClass("price").text());
             m.setIsEnough(n.getElementsByClass("sell_price").text());
             m.setName(n.getElementsByClass("name").text());
+            m.setCompany(company);
             meds.add(m);
         }
     }
