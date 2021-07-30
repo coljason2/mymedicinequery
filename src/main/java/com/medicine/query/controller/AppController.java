@@ -5,6 +5,7 @@ import com.medicine.query.common.Constant;
 import com.medicine.query.exception.MedException;
 import com.medicine.query.model.IbonRsp;
 import com.medicine.query.model.MedEntity;
+import com.medicine.query.service.MedicinePrintService;
 import com.medicine.query.service.MedicineService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,9 @@ public class AppController {
 
     @Autowired
     private MedicineService medicineService;
+
+    @Autowired
+    private MedicinePrintService medicinePrintService;
 
     @RequestMapping(value = {"/login", "/index"}, method = RequestMethod.GET)
     public String login(ModelMap model) {
@@ -76,9 +80,9 @@ public class AppController {
 
         ByteArrayInputStream bis;
         if (querystring.contains(",")) {
-            bis = medicineService.medsReport(medicineService.getMedicineByList(querystring));
+            bis = medicinePrintService.medsReport(medicineService.getMedicineByList(querystring));
         } else {
-            bis = medicineService.medsReport(medicineService.getMedicine(querystring));
+            bis = medicinePrintService.medsReport(medicineService.getMedicine(querystring));
         }
 
         HttpHeaders headers = new HttpHeaders();

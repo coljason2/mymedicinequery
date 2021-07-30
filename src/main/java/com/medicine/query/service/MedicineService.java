@@ -18,8 +18,6 @@ public interface MedicineService {
 
     String getCookies() throws Exception;
 
-    ByteArrayInputStream medsReport(List<MedEntity> meds);
-
     IbonRsp createQRcode(List<MedEntity> meds);
 
     List<MedEntity> getMedicineByList(String strList);

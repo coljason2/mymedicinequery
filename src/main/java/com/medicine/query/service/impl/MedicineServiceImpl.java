@@ -13,6 +13,7 @@ import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.medicine.query.exception.MedException;
 import com.medicine.query.model.*;
+import com.medicine.query.service.MedicinePrintService;
 import com.medicine.query.service.MedicineService;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
@@ -45,8 +46,9 @@ public class MedicineServiceImpl implements MedicineService {
     private final OkHttpClient client = new OkHttpClient();
 
     @Autowired
-    ObjectMapper mapper;
-
+    private ObjectMapper mapper;
+    @Autowired
+    private MedicinePrintService medicinePrintService;
 
     @Override
     public List<MedEntity> getMedicine(String queryName) {
@@ -161,15 +163,10 @@ public class MedicineServiceImpl implements MedicineService {
     }
 
     @Override
-    public ByteArrayInputStream medsReport(List<MedEntity> meds) {
-        return new ByteArrayInputStream(this.createPdfOutputStream(meds).toByteArray());
-    }
-
-    @Override
     public IbonRsp createQRcode(List<MedEntity> meds) {
 
         String hash = UUID.randomUUID().toString();
-        RequestBody fileBody = RequestBody.create(this.createPdfOutputStream(meds).toByteArray(), MediaType.parse("pdf"));
+        RequestBody fileBody = RequestBody.create(medicinePrintService.createPdfOutputStream(meds).toByteArray(), MediaType.parse("pdf"));
         RequestBody requestBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM).addFormDataPart("file", "", fileBody)
                 .addFormDataPart("fileName", "meds.pdf")
@@ -243,98 +240,6 @@ public class MedicineServiceImpl implements MedicineService {
         return list;
     }
 
-
-    private ByteArrayOutputStream createPdfOutputStream(List<MedEntity> meds) {
-        com.itextpdf.text.Document document = new com.itextpdf.text.Document();
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-
-        try {
-
-            PdfPTable table = this.createTable();
-
-            BaseFont bfChinese = BaseFont.createFont("MHei-Medium", "UniCNS-UCS2-H", BaseFont.NOT_EMBEDDED);
-            Font defaultFont = new Font(bfChinese, 12, 0);
-            Font font = defaultFont;
-            PdfWriter.getInstance(document, out);
-
-            document.open();
-            String preCompany = meds.get(0).getCompany();
-            Paragraph title = new Paragraph("【" + meds.get(0).getCompany() + "】", new Font(bfChinese, 20, 0));
-            for (MedEntity med : meds) {
-
-                if (!med.getCompany().equals(preCompany)) {
-                    document.add(title);
-                    document.add(new Paragraph(" ", font));
-                    document.add(table);
-                    document.newPage();
-                    title = new Paragraph("【" + med.getCompany() + "】", new Font(bfChinese, 20, 0));
-                    table = this.createTable();
-                }
-
-                PdfPCell cell;
-
-                cell = new PdfPCell(new Phrase(med.getName(), font));
-                cell.setVerticalAlignment(com.itextpdf.text.Element.ALIGN_MIDDLE);
-                cell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
-                table.addCell(cell);
-
-                cell = new PdfPCell(new Phrase(med.getIsEnough(), font));
-                cell.setVerticalAlignment(com.itextpdf.text.Element.ALIGN_MIDDLE);
-                cell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
-                table.addCell(cell);
-
-                cell = new PdfPCell(new Phrase(String.valueOf(med.getOid()), font));
-                cell.setVerticalAlignment(com.itextpdf.text.Element.ALIGN_MIDDLE);
-                cell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
-                table.addCell(cell);
-
-                cell = new PdfPCell(new Phrase(String.valueOf(med.getOidPrice()), font));
-                cell.setVerticalAlignment(com.itextpdf.text.Element.ALIGN_MIDDLE);
-                cell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
-                table.addCell(cell);
-
-                preCompany = med.getCompany();
-
-            }
-
-            document.add(title);
-            document.add(new Paragraph(" ", font));
-            document.add(table);
-            document.close();
-
-        } catch (Exception ex) {
-            log.error("Error occurred: {0}", ex);
-        }
-        return out;
-    }
-
-    private PdfPTable createTable() throws DocumentException, IOException {
-        PdfPTable table = new PdfPTable(4);
-        table.setWidthPercentage(105);
-        table.setWidths(new int[]{4, 3, 2, 2});
-
-        BaseFont bfChinese = BaseFont.createFont("MHei-Medium", "UniCNS-UCS2-H", BaseFont.NOT_EMBEDDED);
-        Font defaultFont = new Font(bfChinese, 12, 0);
-        Font font = defaultFont;
-
-        PdfPCell hcell;
-        hcell = new PdfPCell(new Phrase("藥名", font));
-        hcell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
-        table.addCell(hcell);
-
-        hcell = new PdfPCell(new Phrase("藥價/庫存", font));
-        hcell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
-        table.addCell(hcell);
-
-        hcell = new PdfPCell(new Phrase("健保碼", font));
-        hcell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
-        table.addCell(hcell);
-
-        hcell = new PdfPCell(new Phrase("健保價", font));
-        hcell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
-        table.addCell(hcell);
-        return table;
-    }
 
     private void setResponseEntities(List<MedEntity> meds, Document resault, String company) {
         for (Element n : resault.getElementsByClass("item_text")) {
