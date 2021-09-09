@@ -11,6 +11,7 @@
     * PDF/CSV匯出
     * 健保網頁查詢
     * Swagger API 支援
+    * 支援多藥品公司查詢
 
 ## Demo 頁面
 * https://mymedicinequery.herokuapp.com/
