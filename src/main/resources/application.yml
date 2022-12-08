@@ -31,6 +31,9 @@ spring:
 logging:
   level:
     root: INFO
+  file:
+    name: "${spring.application.name}.log"
+    path: "."
 
 management:
   health:
