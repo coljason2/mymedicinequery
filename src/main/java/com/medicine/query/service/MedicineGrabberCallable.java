@@ -4,7 +4,6 @@ import com.medicine.query.exception.MedException;
 import com.medicine.query.model.LoginFormData;
 import com.medicine.query.model.MedEntity;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -129,8 +128,10 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
         String cookiePara = "";
         try {
             Connection.Response res = Jsoup.connect("http://www.chahwa.com.tw/user.php")
+                    .header("User-Agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/110.0")
+                    .header("Content-Type","application/x-www-form-urlencoded")
                     .data("username", new String(Base64.getDecoder().decode(form.getUsername())), "password", new String(Base64.getDecoder().decode((form.getPassword()))), "wsrc", form.getWsrc(), "act",
-                            form.getAct(), "back_act", form.getBack_act())
+                            form.getAct(), "back_act", form.getBack_act(),"submit",form.getSubmit())
                     .method(Connection.Method.POST).execute();
             cookies = res.cookies();
 
