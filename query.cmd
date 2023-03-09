@@ -1,0 +1,1 @@
+java  -Dserver.port=80 -Dfile.encoding=utf8 -Duser.timezone=GMT+08 -XX:+UseG1GC  -Djava.security.egd=file:/dev/./urandom -jar ./target/query-1.0.0.jar
