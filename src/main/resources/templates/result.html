@@ -41,7 +41,7 @@
             <td>
                 <span th:if="${item.oid == '無健保給付'}"><span th:text="${item.oid}"/></span>
                 <span th:unless="${item.oid == '無健保給付'}">
-                    <a th:href="'https://www.nhi.gov.tw/QueryN/Query1_Print.aspx?Q1ID='+${item.oid}"
+                    <a th:href="'/query/health/code/'+${item.oid}"
                        target="_blank"><span th:text="${item.oid}"/></a>
                 </span>
             </td>
@@ -50,7 +50,7 @@
         </tbody>
     </table>
     <a th:href="'/pdfreport?querystring='+${querystring}" 　 target="_blank" class="btn btn-info" 　>產生PDF</a>
-    <a th:href="'/qrcode?querystring='+${querystring}" 　 target="_blank" class="btn btn-success" 　>產生QR Code</a>
+<!--    <a th:href="'/qrcode?querystring='+${querystring}" 　 target="_blank" class="btn btn-success" 　>產生QR Code</a>-->
 </div>
 <footer class="footer" th:include="components/footer :: footer"></footer>
 <script>

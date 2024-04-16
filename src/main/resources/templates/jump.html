@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="components/header :: header"></head>
+<nav class="navbar navbar-inverse navbar-fixed-top" th:include="components/nav :: nav"></nav>
+<body>
+<div class="container">
+    <h2>Redirecting...</h2>
+    <a id="jumpLink" th:utext="${link}"></a>
+    <script>
+        var linkElement = document.getElementById("jumpLink");
+        if (linkElement !== '') {
+            window.location.href = linkElement.innerText;
+        } else {
+            // Handle case where link is empty
+            console.error('Link is empty.');
+        }
+    </script>
+</div>
+<footer class="footer" th:include="components/footer :: footer"></footer>
+</body>
+</html>

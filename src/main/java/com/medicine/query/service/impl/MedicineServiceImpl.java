@@ -1,16 +1,9 @@
 package com.medicine.query.service.impl;
 
 
+import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.itextpdf.text.DocumentException;
-import com.itextpdf.text.Font;
-import com.itextpdf.text.Paragraph;
-import com.itextpdf.text.Phrase;
-import com.itextpdf.text.pdf.BaseFont;
-import com.itextpdf.text.pdf.PdfPCell;
-import com.itextpdf.text.pdf.PdfPTable;
-import com.itextpdf.text.pdf.PdfWriter;
 import com.medicine.query.exception.MedException;
 import com.medicine.query.model.*;
 import com.medicine.query.service.MedicineGrabberCallable;
@@ -19,24 +12,13 @@ import com.medicine.query.service.MedicineService;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
-import org.jsoup.Connection;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
+import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 
 @Slf4j
@@ -48,6 +30,8 @@ public class MedicineServiceImpl implements MedicineService {
     private static final String postPath = "https://printadmin.ibon.com.tw/IbonUpload/IbonUpload/IbonFileUpload";
     private static final LoginFormData form = new LoginFormData();
     private final OkHttpClient client = new OkHttpClient();
+
+    private static final String fdaLink = "https://info.fda.gov.tw/MLMS/H0001D.aspx?Type=Lic&LicId=";
 
     @Autowired
     private ObjectMapper mapper;
@@ -162,6 +146,60 @@ public class MedicineServiceImpl implements MedicineService {
         Collections.sort(medList, new MedEntity());
         //log.info("list :{} ", medList);
         return medList;
+    }
+
+    @Override
+    public String createFDALink(String code) {
+        // Create a JSONObject
+        JSONObject jsonObject = new JSONObject();
+
+        // Add key-value pairs to the JSONObject
+        jsonObject.put("DRUG_CODE", code);
+        jsonObject.put("DRUG_NAME", "");
+        jsonObject.put("DRUG_DOSE", "");
+        jsonObject.put("DRUG_CLASSIFY_NAME", "");
+        jsonObject.put("DRUG_ING", "");
+        jsonObject.put("DRUG_ING_QTY", "");
+        jsonObject.put("DRUG_ING_UNIT", "");
+        jsonObject.put("DRUG_STD_QTY", "");
+        jsonObject.put("DRUG_STD_UNIT", "");
+        jsonObject.put("DRUGGIST_NAME", "");
+        jsonObject.put("MIXTURE", "");
+        jsonObject.put("PAY_START_DATE_YEAR", "");
+        jsonObject.put("PAY_START_DATE_MON", "");
+        jsonObject.put("ORAL_TYPE", "");
+        jsonObject.put("ATC_CODE", "");
+        jsonObject.put("SHOWTYPE", "Y");
+        jsonObject.put("CURPAGE", 1);
+        jsonObject.put("PAGESIZE", 50);
+
+        OkHttpClient client = new OkHttpClient().newBuilder()
+                .build();
+        MediaType mediaType = MediaType.parse("application/json");
+        RequestBody body = RequestBody.create(mediaType, jsonObject.toJSONString());
+        Request request = new Request.Builder()
+                .url("https://info.nhi.gov.tw/api/INAE3000/INAE3000S01/SQL0001")
+                .method("POST", body)
+                .addHeader("Content-Type", "application/json")
+                .build();
+
+        Response response = null;
+        JSONObject rsp;
+        String resultLink = fdaLink;
+        try {
+            response = client.newCall(request).execute();
+            rsp = JSONObject.parseObject(response.body().string());
+            if (Objects.nonNull(rsp.getJSONArray("data")) && rsp.getJSONArray("data").size() > 0) {
+                resultLink = fdaLink + rsp.getJSONArray("data").getJSONObject(0).getString("doH_ID");
+            }
+
+            log.info("resultLink:{}", resultLink);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+
+        return resultLink;
     }
 
 

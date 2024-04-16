@@ -15,14 +15,12 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.validation.constraints.NotNull;
 import java.io.ByteArrayInputStream;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -113,4 +111,15 @@ public class AppController {
         return "qrcode";
     }
 
+    @RequestMapping(value = "/query/health/code/{acCode}", method = RequestMethod.GET)
+    public String queryHealthCode(@PathVariable("acCode") String acCode, Model model) {
+        log.info("健保碼：{}", acCode);
+        try {
+            model.addAttribute("link", medicineService.createFDALink(acCode));
+        } catch (Exception e) {
+            log.error("queryHealthCode", e);
+            throw new MedException(e);
+        }
+        return "jump";
+    }
 }
