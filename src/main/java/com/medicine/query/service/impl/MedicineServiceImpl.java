@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
@@ -128,20 +129,20 @@ public class MedicineServiceImpl implements MedicineService {
     public List<MedEntity> getMedicineByList(String strList) {
         List<String> namesList = Arrays.asList(strList.split(","));
         List<MedEntity> medList = new ArrayList<>();
-        List<Future<List<MedEntity>>> futureList = new ArrayList<Future<List<MedEntity>>>();
-        for (String company : namesList) {
+        List<Future<List<MedEntity>>> futureList = new CopyOnWriteArrayList<>();
+        namesList.parallelStream().forEachOrdered(company -> {
             MedicineGrabberCallable callable = new MedicineGrabberCallable(company);
             Future<List<MedEntity>> future = executorService.submit(callable);
             futureList.add(future);
-        }
+        });
 
-        for (Future<List<MedEntity>> f : futureList) {
+        futureList.parallelStream().forEachOrdered(f -> {
             try {
                 medList.addAll(f.get());
             } catch (Exception e) {
                 log.error("future get error :{} ", e);
             }
-        }
+        });
 
         Collections.sort(medList, new MedEntity());
         //log.info("list :{} ", medList);

@@ -46,7 +46,6 @@ public class MedicinePrintServiceImpl implements MedicinePrintService {
             String preCompany = meds.get(0).getCompany();
             Paragraph title = new Paragraph("【" + meds.get(0).getCompany() + "】", new Font(bfChinese, 20, 0));
             for (MedEntity med : meds) {
-
                 if (!med.getCompany().equals(preCompany)) {
                     document.add(title);
                     document.add(new Paragraph(" ", font));
@@ -79,7 +78,6 @@ public class MedicinePrintServiceImpl implements MedicinePrintService {
                 table.addCell(cell);
 
                 preCompany = med.getCompany();
-
             }
 
             document.add(title);

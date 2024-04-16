@@ -21,6 +21,7 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -45,7 +46,7 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
     public List<MedEntity> getMedicine(String queryName) {
 
         String cookie = getCookies();
-        List<MedEntity> meds = new ArrayList<MedEntity>();
+        List<MedEntity> meds = new CopyOnWriteArrayList<>();
         // clean code
         String parseString = decode(getContext(queryName, cookie).replace("\\//", "")).replace("\\", "").replace("}", "")
                 .replace("{", "").replace("rn", "");
@@ -146,7 +147,8 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
     }
 
     private void setResponseEntities(List<MedEntity> meds, Document resault, String company) {
-        for (Element n : resault.getElementsByClass("item_text")) {
+        resault.getElementsByClass("item_text").parallelStream().forEachOrdered(n->{
+//        for (Element n : resault.getElementsByClass("item_text")) {
             MedEntity m = new MedEntity();
             m.setOid(n.getElementsByClass("code").text());
             m.setOidPrice(n.getElementsByClass("price").text());
@@ -154,6 +156,6 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
             m.setName(n.getElementsByClass("name").text());
             m.setCompany(company);
             meds.add(m);
-        }
+        });
     }
 }
