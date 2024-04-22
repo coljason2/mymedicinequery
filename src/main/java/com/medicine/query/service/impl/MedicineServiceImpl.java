@@ -22,6 +22,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 
+@Deprecated
 @Slf4j
 @Service
 public class MedicineServiceImpl implements MedicineService {

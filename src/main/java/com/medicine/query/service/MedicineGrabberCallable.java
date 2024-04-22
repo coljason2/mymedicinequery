@@ -4,11 +4,9 @@ import com.medicine.query.exception.MedException;
 import com.medicine.query.model.LoginFormData;
 import com.medicine.query.model.MedEntity;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -16,7 +14,6 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -147,7 +144,7 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
     }
 
     private void setResponseEntities(List<MedEntity> meds, Document resault, String company) {
-        resault.getElementsByClass("item_text").parallelStream().forEachOrdered(n->{
+        resault.getElementsByClass("item_text").parallelStream().forEachOrdered(n -> {
 //        for (Element n : resault.getElementsByClass("item_text")) {
             MedEntity m = new MedEntity();
             m.setOid(n.getElementsByClass("code").text());
