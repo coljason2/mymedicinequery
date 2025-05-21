@@ -95,6 +95,11 @@
             <artifactId>fastjson</artifactId>
             <version>1.2.83</version>
         </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-kotlin</artifactId>
+            <version>2.15.2</version>  <!-- 版本號可用最新或和你的 jackson 版本相容的 -->
+        </dependency>
     </dependencies>
 
     <build>
