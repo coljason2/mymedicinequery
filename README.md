@@ -18,10 +18,8 @@
     * Cloudflare
 
 ## Demo 頁面
-* http://luckymed.hopto.org/login
-* https://www.luckymed.tk/login
+* https://mymedicinequery.onrender.com
 * 帳號密碼 root/root
 
 ##Swagger API 測試
-* http://luckymed.hopto.org/swagger-ui.html
-* https://www.luckymed.tk/swagger-ui.html
+* https://mymedicinequery.onrender.com/swagger-ui.html
