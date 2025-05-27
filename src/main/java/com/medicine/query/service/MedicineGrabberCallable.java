@@ -9,11 +9,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
+import java.net.*;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +22,7 @@ import java.util.regex.Pattern;
 @Slf4j
 public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
 
-    private static final String getdrug = "http://www.chahwa.com.tw/order.php?act=query&&drug=";
+    private static final String getdrug = "https://www.chahwa.com.tw/order.php?act=query&&drug=";
     private static final Pattern reUnicode = Pattern.compile("\\\\u([0-9a-zA-Z]{4})");
     private static final LoginFormData form = new LoginFormData();
 
@@ -126,13 +123,18 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
         Map<String, String> cookies = null;
         String cookiePara = "";
         try {
-            Connection.Response res = Jsoup.connect("http://www.chahwa.com.tw/user.php")
+
+            Proxy prox = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("1.161.198.241", 8082));
+            // 套用自訂 SSL 設定
+            Connection.Response res = Jsoup.connect("https://www.chahwa.com.tw/user.php")
                     .data("username", new String(Base64.getDecoder().decode(form.getUsername())), "password", new String(Base64.getDecoder().decode((form.getPassword()))), "wsrc", form.getWsrc(), "act",
                             form.getAct(), "back_act", form.getBack_act())
-                    .method(Connection.Method.POST).execute();
+                    .method(Connection.Method.POST)
+//                    .proxy(prox)
+                    .execute();
             cookies = res.cookies();
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("getCookies Error ", e);
             throw new MedException(e);
         }
