@@ -14,7 +14,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # 第二階段用 OpenJDK 8 來執行 jar
-FROM openjdk:8-jre-alpine
+FROM eclipse-temurin:8-jre-alpine
 
 WORKDIR /app
 
@@ -23,6 +23,6 @@ COPY --from=builder /app/target/*.jar app.jar
 EXPOSE 8080
 
 ENV PORT=8080
-ENV JAVA_OPTS="-Xmx300m -Xms64m -XX:+UseContainerSupport"
+ENV JAVA_OPTS="-Xmx256m -Xms64m -Xss512k -XX:MaxMetaspaceSize=128m -XX:+UseContainerSupport"
 
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar --server.port=${PORT}"]
