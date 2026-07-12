@@ -3,6 +3,10 @@ server:
   maxHttpHeaderSize: 65536
   maxPostSize: 4194304
 spring:
+  main:
+    lazy-initialization: true
+  jmx:
+    enabled: false
   application:
     name: NewMedicineQuery
   thymeleaf:
@@ -44,7 +48,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: "*"
+        include: "health,info"
     jmx:
       exposure:
         include: "*"

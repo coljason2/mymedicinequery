@@ -12,6 +12,6 @@ public class ThreadPoolConfig {
 
     @Bean
     public ExecutorService executorService(){
-        return Executors.newCachedThreadPool();
+        return Executors.newFixedThreadPool(10);
     }
 }
