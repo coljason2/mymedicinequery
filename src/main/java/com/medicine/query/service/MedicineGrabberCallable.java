@@ -62,7 +62,7 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
     }
 
     public String getContext(String name, String cookiePara) {
-        String context = "";
+        StringBuilder context = new StringBuilder();
         try {
             URL getUrl = new URL(getdrug + URLEncoder.encode(name, "utf-8"));
             HttpURLConnection connection = (HttpURLConnection) getUrl.openConnection();
@@ -74,7 +74,7 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
             BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
             String lines;
             while ((lines = reader.readLine()) != null) {
-                context = context + decode(lines);
+                context.append(decode(lines));
             }
             reader.close();
             connection.disconnect();
@@ -82,11 +82,11 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
             log.error("Getcontext Error ", e);
             throw new MedException(e);
         }
-        return context;
+        return context.toString();
     }
 
     public String getContextPage(String name, String cookiePara, int Now_page) {
-        String context = "";
+        StringBuilder context = new StringBuilder();
         try {
             URL getUrl = new URL(getdrug + URLEncoder.encode(name, "utf-8") + "&page=" + Now_page);
             HttpURLConnection connection = (HttpURLConnection) getUrl.openConnection();
@@ -98,7 +98,7 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
             BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
             String lines;
             while ((lines = reader.readLine()) != null) {
-                context = context + decode(lines);
+                context.append(decode(lines));
             }
             reader.close();
             connection.disconnect();
@@ -106,7 +106,7 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
             log.error("Getcontext Error ", e);
             throw new MedException(e);
         }
-        return context;
+        return context.toString();
     }
 
     public String decode(String s) {
@@ -146,8 +146,7 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
     }
 
     private void setResponseEntities(List<MedEntity> meds, Document resault, String company) {
-        resault.getElementsByClass("item_text").parallelStream().forEachOrdered(n -> {
-//        for (Element n : resault.getElementsByClass("item_text")) {
+        for (org.jsoup.nodes.Element n : resault.getElementsByClass("item_text")) {
             MedEntity m = new MedEntity();
             m.setOid(n.getElementsByClass("code").text());
             m.setOidPrice(n.getElementsByClass("price").text());
@@ -155,6 +154,6 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
             m.setName(n.getElementsByClass("name").text());
             m.setCompany(company);
             meds.add(m);
-        });
+        }
     }
 }

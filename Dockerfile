@@ -23,6 +23,6 @@ COPY --from=builder /app/target/*.jar app.jar
 EXPOSE 8080
 
 ENV PORT=8080
-ENV JAVA_OPTS="-Xmx256m -Xms64m -Xss512k -XX:MaxMetaspaceSize=128m -XX:+UseContainerSupport"
+ENV JAVA_OPTS="-Xmx256m -Xms64m -Xss512k -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC -XX:+UseContainerSupport"
 
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar --server.port=${PORT}"]

@@ -2,6 +2,9 @@ server:
   port: 8080
   maxHttpHeaderSize: 65536
   maxPostSize: 4194304
+  tomcat:
+    threads:
+      max: 50
 spring:
   main:
     lazy-initialization: true
