@@ -17,6 +17,11 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.*;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import java.security.cert.CertificateException;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -30,10 +35,9 @@ public class MedicineServiceImpl implements MedicineService {
 
     private static final String uploadPath = "https://printadmin.ibon.com.tw/IbonUpload/IbonUpload/LocalFileUpload";
     private static final String postPath = "https://printadmin.ibon.com.tw/IbonUpload/IbonUpload/IbonFileUpload";
+    private static final String fdaLink = "https://lmspiq.fda.gov.tw/web/DRPIQ/DRPIQ1000Result?licId=";
     private static final LoginFormData form = new LoginFormData();
-    private final OkHttpClient client = new OkHttpClient();
-
-    private static final String fdaLink = "https://info.fda.gov.tw/MLMS/H0001D.aspx?Type=Lic&LicId=";
+    private final OkHttpClient client = getUnsafeOkHttpClient();
 
     @Autowired
     private ObjectMapper mapper;
@@ -175,8 +179,7 @@ public class MedicineServiceImpl implements MedicineService {
         jsonObject.put("CURPAGE", 1);
         jsonObject.put("PAGESIZE", 50);
 
-        OkHttpClient client = new OkHttpClient().newBuilder()
-                .build();
+
         MediaType mediaType = MediaType.parse("application/json");
         RequestBody body = RequestBody.create(mediaType, jsonObject.toJSONString());
         Request request = new Request.Builder()
@@ -204,5 +207,32 @@ public class MedicineServiceImpl implements MedicineService {
         return resultLink;
     }
 
+    private static OkHttpClient getUnsafeOkHttpClient() {
+        try {
+            final TrustManager[] trustAllCerts = new TrustManager[]{
+                    new X509TrustManager() {
+                        @Override
+                        public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
+                        }
+                        @Override
+                        public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
+                        }
+                        @Override
+                        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                            return new java.security.cert.X509Certificate[]{};
+                        }
+                    }
+            };
+            final SSLContext sslContext = SSLContext.getInstance("SSL");
+            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+            final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
 
+            return new OkHttpClient.Builder()
+                    .sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0])
+                    .hostnameVerifier((hostname, session) -> true)
+                    .build();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

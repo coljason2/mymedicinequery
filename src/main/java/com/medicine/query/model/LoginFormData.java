@@ -1,13 +1,11 @@
 package com.medicine.query.model;
 
 
-import io.swagger.annotations.ApiModel;
 import lombok.Data;
 
 import java.util.Base64;
 
 
-@ApiModel(value = "登入資訊")
 @Data
 public class LoginFormData {
     private String username = "TGlzYW5pdGFteQ==";

@@ -57,7 +57,7 @@ public class AppController {
             throw new MedException(e);
         }
         model.addAttribute("querystring", querystring);
-        return "result";
+        return "result :: resultFragment";
     }
 
     @RequestMapping(value = "/query/list", method = RequestMethod.POST)
@@ -69,7 +69,7 @@ public class AppController {
             throw new MedException(e);
         }
         model.addAttribute("querystring", querystring);
-        return "result";
+        return "result :: resultFragment";
     }
 
     @RequestMapping(value = "/pdfreport", method = RequestMethod.GET,
