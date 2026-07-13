@@ -23,7 +23,7 @@
 ### 3. 反向代理 (Reverse Proxy) 與 SSL 繞過機制
 * **代理開關**：凡涉及向目標網站發送 HTTP 請求時，皆須判斷環境變數 `REVERSE_PROXY_URL`。有設定時走代理並帶上認證，未設定時則採本地直連。
 * **Ngrok 警告繞過與授權**：走反向代理時，必須帶上 `ngrok-skip-browser-warning` Header 以繞過 Ngrok 免費版的安全警告頁面，並攜帶基於 `PROXY_USER` 與 `PROXY_PASS` 產生的 Basic Auth `Authorization` Header。
-* **SSL 交握失敗防護**：由於雲端環境 (如 Render) 的 JDK 可能因憑證驗證或 TLS 演算法不相容而拋出 `SSLHandshakeException: handshake_failure`，發送請求 (Jsoup / HttpURLConnection) 時必須強制注入自訂的 `SSLSocketFactory`，以無條件信任所有憑證 (TrustAll) 並強制使用 `TLSv1.2` 進行連線。
+* **SSL 交握失敗防護與 SNI 保留**：由於雲端環境 (如 Render) 的 JDK 可能因憑證驗證或 TLS 演算法不相容而拋出 `SSLHandshakeException`，發送請求 (Jsoup / HttpURLConnection) 時必須強制注入自訂的 `SSLSocketFactory`，以無條件信任所有憑證 (TrustAll) 並強制使用 `TLSv1.2`。**注意：自訂 `SSLSocketFactory` 時必須手動為 SSL 接口配置 SNI (Server Name Indication)，否則 Ngrok 閘道會因遺失 SNI 標頭而主動斷開連線。**
 
 ### 4. 檔案編碼標準
 * 新增或修改任何專案檔案（包含 Java 原始碼、Thymeleaf 模板、設定檔等）時，必須確保編碼為標準 UTF-8（無 BOM）。

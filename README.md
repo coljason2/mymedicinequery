@@ -69,6 +69,10 @@ services:
 
 未設定 `REVERSE_PROXY_URL` 時，系統預設為本地直連模式。
 
+### 3. 技術說明
+本專案已在連線層（Jsoup / HttpURLConnection）原生實作了 TrustAll 憑證信任機制與 SNI (Server Name Indication) 保留，並強制採用 TLSv1.2 協定，因此在 Render 等雲端容器環境下部署時，無需額外配置 JVM 憑證即可安全穿透代理。
+
+
 ## 執行與測試
 * **環境要求**: JDK 8+ / Maven 3.6+
 * **啟動方式**: 在 IDE 中執行 `MedQueryApplication.java` 或使用指令 `mvn spring-boot:run`。
