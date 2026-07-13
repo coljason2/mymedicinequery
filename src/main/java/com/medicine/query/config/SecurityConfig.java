@@ -46,6 +46,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .csrf().disable();
 
+        http.exceptionHandling()
+                .authenticationEntryPoint((request, response, authException) -> {
+                    if ("XMLHttpRequest".equals(request.getHeader("X-Requested-With"))) {
+                        response.sendError(javax.servlet.http.HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+                    } else {
+                        response.sendRedirect(request.getContextPath() + "/login");
+                    }
+                });
+
         http
                 .authorizeRequests()
                 .antMatchers("/login", "/css/**", "/images/**").permitAll()

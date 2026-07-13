@@ -80,8 +80,13 @@
                                 $('#main-content').replaceWith(response);
                                 $('#loading-mask').hide(); // 隱藏遮罩
                             },
-                            error: function() {
-                                alert("查詢發生錯誤，請重試！");
+                            error: function(xhr) {
+                                if (xhr.status === 401) {
+                                    alert("登入已過期，請重新登入！");
+                                    window.location.href = '/login';
+                                } else {
+                                    alert("查詢發生錯誤，請重試！");
+                                }
                                 $('#loading-mask').hide(); // 隱藏遮罩
                             }
                         });
