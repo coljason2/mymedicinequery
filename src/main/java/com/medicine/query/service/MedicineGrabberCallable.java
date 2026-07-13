@@ -128,9 +128,12 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
             String connectUrl = targetUrl;
             
             if ("true".equals(System.getenv("USE_SCRAPER_API"))) {
+                log.info("Using Scraper API for getCookies");
                 String apiKey = System.getenv("SCRAPER_API_KEY");
                 String encodedUrl = java.net.URLEncoder.encode(targetUrl, "UTF-8");
                 connectUrl = "http://api.scraperapi.com?api_key=" + apiKey + "&country_code=tw&url=" + encodedUrl;
+            } else {
+                log.info("Not using Scraper API for getCookies");
             }
 
             // 套用自訂 SSL 設定
@@ -138,6 +141,7 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
                     .data("username", new String(Base64.getDecoder().decode(form.getUsername())), "password", new String(Base64.getDecoder().decode((form.getPassword()))), "wsrc", form.getWsrc(), "act",
                             form.getAct(), "back_act", form.getBack_act())
                     .method(Connection.Method.POST)
+                    .timeout(30000)
                     .execute();
             cookies = res.cookies();
 
