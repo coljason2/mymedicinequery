@@ -5,7 +5,7 @@
 ## 專案背景與佈署環境
 * 專案名稱：福誠查藥系統 (mymedicinequery)
 * 佈署平台：Render (雲端代管平台)
-* 架構限制：Render 的 Outbound IP 容易被目標爬取網站 (https://www.chahwa.com.tw) 阻擋，因此專案必須全面透過 Scraper API 進行代理請求。
+* 架構限制：Render 等雲端服務的 IP 容易被目標網站 (https://www.chahwa.com.tw) 阻擋，因此專案採用本地反向代理 (Reverse Proxy, Caddy + Ngrok) 架構進行請求轉發。
 
 ---
 
@@ -14,15 +14,16 @@
 ### 1. 嚴禁魔術字串與寫死數值
 * 所有外部連接的 URL、API 端點、逾時時間與設定值，嚴禁直接寫死在方法中。
 * 必須抽取至類別頂部定義為常數 (private static final)。
-  * 範例：將 Scraper API 連線格式抽取為 `SCRAPER_API_URL_TEMPLATE`，目標登入路徑抽取為 `TARGET_LOGIN_URL`。
+  * 範例：目標登入路徑抽取為 `TARGET_LOGIN_URL`，逾時設定為 `TIMEOUT_MS`。
 
 ### 2. 網路逾時設定與連線控制
 * 凡是使用 HttpURLConnection、Jsoup 或 OkHttp3 發送網路請求，必須同時設定 Connect Timeout 與 Read Timeout。
-* 由於本專案使用 Scraper API 代理，Scraper API 內部重試機制通常需要較長的時間。超時設定至少需設定為 60 秒 (TIMEOUT_MS = 60000)，嚴禁使用預設或過短的逾時限制，以防止在代理重試期間發生 SocketTimeoutException。
+* 由於本專案會透過外部代理隧道，網路延遲較大，超時設定至少需為 60 秒 (TIMEOUT_MS = 60000)，嚴禁使用過短的逾時限制。
 
-### 3. 代理伺服器 (Scraper API) 的一致性
-* 凡是涉及向目標網站 (chahwa.com.tw) 發送 HTTP 請求（包含 `getCookies`、`getContext`、`getContextPage` 等），皆須實作 `USE_SCRAPER_API` 環境變數的判斷。
-* 當 `USE_SCRAPER_API` 為 true 時，請求路徑必須改用 `SCRAPER_API_URL_TEMPLATE` 進行封裝，確保佈署至 Render 時能穩定繞過防火牆阻擋。
+### 3. 反向代理 (Reverse Proxy) 與 SSL 繞過機制
+* **代理開關**：凡涉及向目標網站發送 HTTP 請求時，皆須判斷環境變數 `REVERSE_PROXY_URL`。有設定時走代理並帶上認證，未設定時則採本地直連。
+* **Ngrok 警告繞過與授權**：走反向代理時，必須帶上 `ngrok-skip-browser-warning` Header 以繞過 Ngrok 免費版的安全警告頁面，並攜帶基於 `PROXY_USER` 與 `PROXY_PASS` 產生的 Basic Auth `Authorization` Header。
+* **SSL 交握失敗防護**：由於雲端環境 (如 Render) 的 JDK 可能因憑證驗證或 TLS 演算法不相容而拋出 `SSLHandshakeException: handshake_failure`，發送請求 (Jsoup / HttpURLConnection) 時必須強制注入自訂的 `SSLSocketFactory`，以無條件信任所有憑證 (TrustAll) 並強制使用 `TLSv1.2` 進行連線。
 
 ### 4. 檔案編碼標準
 * 新增或修改任何專案檔案（包含 Java 原始碼、Thymeleaf 模板、設定檔等）時，必須確保編碼為標準 UTF-8（無 BOM）。

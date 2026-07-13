@@ -11,7 +11,9 @@ import org.jsoup.nodes.Document;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.*;
+import java.security.cert.X509Certificate;
 import java.util.Base64;
+import javax.net.ssl.*;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -42,6 +44,23 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
             return "Basic " + Base64.getEncoder().encodeToString(auth.getBytes());
         }
         return null;
+    }
+
+    private static SSLSocketFactory getTrustAllSSLSocketFactory() {
+        try {
+            TrustManager[] trustAllCerts = new TrustManager[]{
+                new X509TrustManager() {
+                    public X509Certificate[] getAcceptedIssuers() { return new X509Certificate[0]; }
+                    public void checkClientTrusted(X509Certificate[] certs, String authType) { }
+                    public void checkServerTrusted(X509Certificate[] certs, String authType) { }
+                }
+            };
+            SSLContext sc = SSLContext.getInstance("TLSv1.2");
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+            return sc.getSocketFactory();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create SSLSocketFactory", e);
+        }
     }
 
     public MedicineGrabberCallable(String queryName) {
@@ -113,6 +132,11 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
         StringBuilder context = new StringBuilder();
         URL getUrl = new URL(targetUrl);
         HttpURLConnection connection = (HttpURLConnection) getUrl.openConnection();
+        
+        if (connection instanceof HttpsURLConnection) {
+            ((HttpsURLConnection) connection).setSSLSocketFactory(getTrustAllSSLSocketFactory());
+        }
+        
         connection.setRequestMethod("GET");
         connection.setDoOutput(true);
         connection.setConnectTimeout(TIMEOUT_MS);
@@ -161,8 +185,9 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
                 log.info("Not using Reverse Proxy for getCookies");
             }
 
-            // 套用自訂 SSL 設定
+            // 套用自訂 SSL 設定與強制 TLSv1.2
             Connection con = Jsoup.connect(getBaseUrl() + "/user.php")
+                    .sslSocketFactory(getTrustAllSSLSocketFactory())
                     .data("username", new String(Base64.getDecoder().decode(form.getUsername())), 
                           "password", new String(Base64.getDecoder().decode((form.getPassword()))), 
                           "wsrc", form.getWsrc(), "act", form.getAct(), "back_act", form.getBack_act())
