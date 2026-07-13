@@ -22,6 +22,9 @@ import java.util.regex.Pattern;
 @Slf4j
 public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
 
+    private static final int TIMEOUT_MS = 30000;
+    private static final String SCRAPER_API_URL_TEMPLATE = "http://api.scraperapi.com?api_key=%s&country_code=tw&url=%s";
+    private static final String TARGET_LOGIN_URL = "https://www.chahwa.com.tw/user.php";
     private static final String getdrug = "https://www.chahwa.com.tw/order.php?act=query&&drug=";
     private static final Pattern reUnicode = Pattern.compile("\\\\u([0-9a-zA-Z]{4})");
     private static final LoginFormData form = new LoginFormData();
@@ -69,13 +72,14 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
             if ("true".equals(System.getenv("USE_SCRAPER_API"))) {
                 String apiKey = System.getenv("SCRAPER_API_KEY");
                 String encodedUrl = URLEncoder.encode(targetUrl, "UTF-8");
-                connectUrl = "http://api.scraperapi.com?api_key=" + apiKey + "&country_code=tw&url=" + encodedUrl;
+                connectUrl = String.format(SCRAPER_API_URL_TEMPLATE, apiKey, encodedUrl);
             }
             URL getUrl = new URL(connectUrl);
             HttpURLConnection connection = (HttpURLConnection) getUrl.openConnection();
             connection.setRequestMethod("GET");
             connection.setDoOutput(true);
-            connection.setReadTimeout(3000);
+            connection.setConnectTimeout(TIMEOUT_MS);
+            connection.setReadTimeout(TIMEOUT_MS);
             connection.addRequestProperty("Cookie", cookiePara);
             connection.connect();
             BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
@@ -100,13 +104,14 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
             if ("true".equals(System.getenv("USE_SCRAPER_API"))) {
                 String apiKey = System.getenv("SCRAPER_API_KEY");
                 String encodedUrl = URLEncoder.encode(targetUrl, "UTF-8");
-                connectUrl = "http://api.scraperapi.com?api_key=" + apiKey + "&country_code=tw&url=" + encodedUrl;
+                connectUrl = String.format(SCRAPER_API_URL_TEMPLATE, apiKey, encodedUrl);
             }
             URL getUrl = new URL(connectUrl);
             HttpURLConnection connection = (HttpURLConnection) getUrl.openConnection();
             connection.setRequestMethod("GET");
             connection.setDoOutput(true);
-            connection.setReadTimeout(3000);
+            connection.setConnectTimeout(TIMEOUT_MS);
+            connection.setReadTimeout(TIMEOUT_MS);
             connection.addRequestProperty("Cookie", cookiePara);
             connection.connect();
             BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
@@ -138,14 +143,14 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
         String cookiePara = "";
         try {
 
-            String targetUrl = "https://www.chahwa.com.tw/user.php";
+            String targetUrl = TARGET_LOGIN_URL;
             String connectUrl = targetUrl;
             
             if ("true".equals(System.getenv("USE_SCRAPER_API"))) {
                 log.info("Using Scraper API for getCookies");
                 String apiKey = System.getenv("SCRAPER_API_KEY");
                 String encodedUrl = java.net.URLEncoder.encode(targetUrl, "UTF-8");
-                connectUrl = "http://api.scraperapi.com?api_key=" + apiKey + "&country_code=tw&url=" + encodedUrl;
+                connectUrl = String.format(SCRAPER_API_URL_TEMPLATE, apiKey, encodedUrl);
             } else {
                 log.info("Not using Scraper API for getCookies");
             }
@@ -155,7 +160,7 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
                     .data("username", new String(Base64.getDecoder().decode(form.getUsername())), "password", new String(Base64.getDecoder().decode((form.getPassword()))), "wsrc", form.getWsrc(), "act",
                             form.getAct(), "back_act", form.getBack_act())
                     .method(Connection.Method.POST)
-                    .timeout(30000)
+                    .timeout(TIMEOUT_MS)
                     .execute();
             cookies = res.cookies();
 
