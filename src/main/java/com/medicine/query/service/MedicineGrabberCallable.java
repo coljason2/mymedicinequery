@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
 @Slf4j
 public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
 
-    private static final int TIMEOUT_MS = 30000;
+    private static final int TIMEOUT_MS = 60000;
     private static final String SCRAPER_API_URL_TEMPLATE = "http://api.scraperapi.com?api_key=%s&country_code=tw&url=%s";
     private static final String TARGET_LOGIN_URL = "https://www.chahwa.com.tw/user.php";
     private static final String getdrug = "https://www.chahwa.com.tw/order.php?act=query&&drug=";

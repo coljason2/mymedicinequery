@@ -18,7 +18,7 @@
 
 ### 2. 網路逾時設定與連線控制
 * 凡是使用 HttpURLConnection、Jsoup 或 OkHttp3 發送網路請求，必須同時設定 Connect Timeout 與 Read Timeout。
-* 由於本專案使用 Scraper API 代理，請求回應時間較長，超時設定至少需設定為 30 秒 (TIMEOUT_MS = 30000)，嚴禁使用預設或過短的逾時限制（例如 3 秒），以防止 SocketTimeoutException。
+* 由於本專案使用 Scraper API 代理，Scraper API 內部重試機制通常需要較長的時間。超時設定至少需設定為 60 秒 (TIMEOUT_MS = 60000)，嚴禁使用預設或過短的逾時限制，以防止在代理重試期間發生 SocketTimeoutException。
 
 ### 3. 代理伺服器 (Scraper API) 的一致性
 * 凡是涉及向目標網站 (chahwa.com.tw) 發送 HTTP 請求（包含 `getCookies`、`getContext`、`getContextPage` 等），皆須實作 `USE_SCRAPER_API` 環境變數的判斷。
