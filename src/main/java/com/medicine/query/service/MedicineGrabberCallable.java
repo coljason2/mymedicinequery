@@ -23,14 +23,15 @@ import java.util.regex.Pattern;
 public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
 
     private static final int TIMEOUT_MS = 60000;
-    private static final String SCRAPER_API_URL_TEMPLATE = "http://api.scraperapi.com?api_key=%s&country_code=tw&url=%s";
-    private static final String SCRAPER_API_WITH_HEADERS_TEMPLATE = "http://api.scraperapi.com?api_key=%s&country_code=tw&keep_headers=true&url=%s";
+    private static final String SCRAPER_API_URL_TEMPLATE = "http://api.scraperapi.com?api_key=%s&country_code=tw&session_number=%d&url=%s";
+    private static final String SCRAPER_API_WITH_HEADERS_TEMPLATE = "http://api.scraperapi.com?api_key=%s&country_code=tw&keep_headers=true&session_number=%d&url=%s";
     private static final String TARGET_LOGIN_URL = "https://www.chahwa.com.tw/user.php";
     private static final String getdrug = "https://www.chahwa.com.tw/order.php?act=query&&drug=";
     private static final Pattern reUnicode = Pattern.compile("\\\\u([0-9a-zA-Z]{4})");
     private static final LoginFormData form = new LoginFormData();
 
     private String queryName;
+    private final int scraperSessionId = new java.util.Random().nextInt(1000000);
 
     public MedicineGrabberCallable(String queryName) {
         this.queryName = queryName;
@@ -85,7 +86,7 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
             if ("true".equals(System.getenv("USE_SCRAPER_API"))) {
                 String apiKey = System.getenv("SCRAPER_API_KEY");
                 String encodedUrl = URLEncoder.encode(targetUrl, "UTF-8");
-                connectUrl = String.format(SCRAPER_API_WITH_HEADERS_TEMPLATE, apiKey, encodedUrl);
+                connectUrl = String.format(SCRAPER_API_WITH_HEADERS_TEMPLATE, apiKey, scraperSessionId, encodedUrl);
             }
             URL getUrl = new URL(connectUrl);
             HttpURLConnection connection = (HttpURLConnection) getUrl.openConnection();
@@ -117,7 +118,7 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
             if ("true".equals(System.getenv("USE_SCRAPER_API"))) {
                 String apiKey = System.getenv("SCRAPER_API_KEY");
                 String encodedUrl = URLEncoder.encode(targetUrl, "UTF-8");
-                connectUrl = String.format(SCRAPER_API_WITH_HEADERS_TEMPLATE, apiKey, encodedUrl);
+                connectUrl = String.format(SCRAPER_API_WITH_HEADERS_TEMPLATE, apiKey, scraperSessionId, encodedUrl);
             }
             URL getUrl = new URL(connectUrl);
             HttpURLConnection connection = (HttpURLConnection) getUrl.openConnection();
@@ -163,7 +164,7 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
                 log.info("Using Scraper API for getCookies");
                 String apiKey = System.getenv("SCRAPER_API_KEY");
                 String encodedUrl = java.net.URLEncoder.encode(targetUrl, "UTF-8");
-                connectUrl = String.format(SCRAPER_API_URL_TEMPLATE, apiKey, encodedUrl);
+                connectUrl = String.format(SCRAPER_API_URL_TEMPLATE, apiKey, scraperSessionId, encodedUrl);
             } else {
                 log.info("Not using Scraper API for getCookies");
             }
