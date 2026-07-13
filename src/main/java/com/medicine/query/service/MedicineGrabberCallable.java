@@ -128,8 +128,9 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
             String connectUrl = targetUrl;
             
             if ("true".equals(System.getenv("USE_SCRAPER_API"))) {
+                String apiKey = System.getenv("SCRAPER_API_KEY");
                 String encodedUrl = java.net.URLEncoder.encode(targetUrl, "UTF-8");
-                connectUrl = "http://api.scraperapi.com?api_key=3579a9ef1cd0a65ca1f12c911b785869&country_code=tw&url=" + encodedUrl;
+                connectUrl = "http://api.scraperapi.com?api_key=" + apiKey + "&country_code=tw&url=" + encodedUrl;
             }
 
             // 套用自訂 SSL 設定
