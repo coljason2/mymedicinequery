@@ -124,13 +124,19 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
         String cookiePara = "";
         try {
 
-            Proxy prox = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("1.161.198.241", 8082));
+            String targetUrl = "https://www.chahwa.com.tw/user.php";
+            String connectUrl = targetUrl;
+            
+            if ("true".equals(System.getenv("USE_SCRAPER_API"))) {
+                String encodedUrl = java.net.URLEncoder.encode(targetUrl, "UTF-8");
+                connectUrl = "http://api.scraperapi.com?api_key=3579a9ef1cd0a65ca1f12c911b785869&country_code=tw&url=" + encodedUrl;
+            }
+
             // 套用自訂 SSL 設定
-            Connection.Response res = Jsoup.connect("https://www.chahwa.com.tw/user.php")
+            Connection.Response res = Jsoup.connect(connectUrl)
                     .data("username", new String(Base64.getDecoder().decode(form.getUsername())), "password", new String(Base64.getDecoder().decode((form.getPassword()))), "wsrc", form.getWsrc(), "act",
                             form.getAct(), "back_act", form.getBack_act())
                     .method(Connection.Method.POST)
-//                    .proxy(prox)
                     .execute();
             cookies = res.cookies();
 
