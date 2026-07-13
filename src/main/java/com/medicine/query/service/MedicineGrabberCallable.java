@@ -23,15 +23,13 @@ import java.util.regex.Pattern;
 public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
 
     private static final int TIMEOUT_MS = 60000;
-    private static final String SCRAPER_API_URL_TEMPLATE = "http://api.scraperapi.com?api_key=%s&country_code=tw&session_number=%d&url=%s";
-    private static final String SCRAPER_API_WITH_HEADERS_TEMPLATE = "http://api.scraperapi.com?api_key=%s&country_code=tw&keep_headers=true&session_number=%d&url=%s";
     private static final String TARGET_LOGIN_URL = "https://www.chahwa.com.tw/user.php";
     private static final String getdrug = "https://www.chahwa.com.tw/order.php?act=query&&drug=";
     private static final Pattern reUnicode = Pattern.compile("\\\\u([0-9a-zA-Z]{4})");
     private static final LoginFormData form = new LoginFormData();
+    private static final String DEFAULT_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36";
 
     private String queryName;
-    private final int scraperSessionId = new java.util.Random().nextInt(1000000);
 
     public MedicineGrabberCallable(String queryName) {
         this.queryName = queryName;
@@ -79,65 +77,54 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
     }
 
     public String getContext(String name, String cookiePara) {
-        StringBuilder context = new StringBuilder();
         try {
             String targetUrl = getdrug + URLEncoder.encode(name, "utf-8");
-            String connectUrl = targetUrl;
-            if ("true".equals(System.getenv("USE_SCRAPER_API"))) {
-                String apiKey = System.getenv("SCRAPER_API_KEY");
-                String encodedUrl = URLEncoder.encode(targetUrl, "UTF-8");
-                connectUrl = String.format(SCRAPER_API_WITH_HEADERS_TEMPLATE, apiKey, scraperSessionId, encodedUrl);
-            }
-            URL getUrl = new URL(connectUrl);
-            HttpURLConnection connection = (HttpURLConnection) getUrl.openConnection();
-            connection.setRequestMethod("GET");
-            connection.setDoOutput(true);
-            connection.setConnectTimeout(TIMEOUT_MS);
-            connection.setReadTimeout(TIMEOUT_MS);
-            connection.addRequestProperty("Cookie", cookiePara);
-            connection.connect();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            String lines;
-            while ((lines = reader.readLine()) != null) {
-                context.append(decode(lines));
-            }
-            reader.close();
-            connection.disconnect();
+            return executeGetRequest(targetUrl, cookiePara);
         } catch (Exception e) {
             log.error("Getcontext Error ", e);
             throw new MedException(e);
         }
-        return context.toString();
     }
 
     public String getContextPage(String name, String cookiePara, int Now_page) {
-        StringBuilder context = new StringBuilder();
         try {
             String targetUrl = getdrug + URLEncoder.encode(name, "utf-8") + "&page=" + Now_page;
-            String connectUrl = targetUrl;
-            if ("true".equals(System.getenv("USE_SCRAPER_API"))) {
-                String apiKey = System.getenv("SCRAPER_API_KEY");
-                String encodedUrl = URLEncoder.encode(targetUrl, "UTF-8");
-                connectUrl = String.format(SCRAPER_API_WITH_HEADERS_TEMPLATE, apiKey, scraperSessionId, encodedUrl);
-            }
-            URL getUrl = new URL(connectUrl);
-            HttpURLConnection connection = (HttpURLConnection) getUrl.openConnection();
-            connection.setRequestMethod("GET");
-            connection.setDoOutput(true);
-            connection.setConnectTimeout(TIMEOUT_MS);
-            connection.setReadTimeout(TIMEOUT_MS);
-            connection.addRequestProperty("Cookie", cookiePara);
-            connection.connect();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            return executeGetRequest(targetUrl, cookiePara);
+        } catch (Exception e) {
+            log.error("Getcontext Error ", e);
+            throw new MedException(e);
+        }
+    }
+
+    private Proxy getProxy() {
+        if ("true".equals(System.getenv("USE_PROXY"))) {
+            String host = System.getenv("PROXY_HOST");
+            String portStr = System.getenv("PROXY_PORT");
+            int port = (portStr != null && !portStr.isEmpty()) ? Integer.parseInt(portStr) : 808;
+            return new Proxy(Proxy.Type.HTTP, new InetSocketAddress(host, port));
+        }
+        return Proxy.NO_PROXY;
+    }
+
+    private String executeGetRequest(String targetUrl, String cookiePara) throws Exception {
+        StringBuilder context = new StringBuilder();
+        URL getUrl = new URL(targetUrl);
+        HttpURLConnection connection = (HttpURLConnection) getUrl.openConnection(getProxy());
+        connection.setRequestMethod("GET");
+        connection.setDoOutput(true);
+        connection.setConnectTimeout(TIMEOUT_MS);
+        connection.setReadTimeout(TIMEOUT_MS);
+        connection.setRequestProperty("User-Agent", DEFAULT_USER_AGENT);
+        connection.addRequestProperty("Cookie", cookiePara);
+        connection.connect();
+        
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
             String lines;
             while ((lines = reader.readLine()) != null) {
                 context.append(decode(lines));
             }
-            reader.close();
+        } finally {
             connection.disconnect();
-        } catch (Exception e) {
-            log.error("Getcontext Error ", e);
-            throw new MedException(e);
         }
         return context.toString();
     }
@@ -156,25 +143,22 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
         Map<String, String> cookies = null;
         String cookiePara = "";
         try {
-
-            String targetUrl = TARGET_LOGIN_URL;
-            String connectUrl = targetUrl;
-            
-            if ("true".equals(System.getenv("USE_SCRAPER_API"))) {
-                log.info("Using Scraper API for getCookies");
-                String apiKey = System.getenv("SCRAPER_API_KEY");
-                String encodedUrl = java.net.URLEncoder.encode(targetUrl, "UTF-8");
-                connectUrl = String.format(SCRAPER_API_URL_TEMPLATE, apiKey, scraperSessionId, encodedUrl);
+            if ("true".equals(System.getenv("USE_PROXY"))) {
+                log.info("Using Local Proxy for getCookies");
             } else {
-                log.info("Not using Scraper API for getCookies");
+                log.info("Not using Proxy for getCookies");
             }
 
             // 套用自訂 SSL 設定
-            Connection.Response res = Jsoup.connect(connectUrl)
-                    .data("username", new String(Base64.getDecoder().decode(form.getUsername())), "password", new String(Base64.getDecoder().decode((form.getPassword()))), "wsrc", form.getWsrc(), "act",
-                            form.getAct(), "back_act", form.getBack_act())
+            Connection.Response res = Jsoup.connect(TARGET_LOGIN_URL)
+                    .proxy(getProxy())
+                    .data("username", new String(Base64.getDecoder().decode(form.getUsername())), 
+                          "password", new String(Base64.getDecoder().decode((form.getPassword()))), 
+                          "wsrc", form.getWsrc(), "act", form.getAct(), "back_act", form.getBack_act())
                     .method(Connection.Method.POST)
                     .timeout(TIMEOUT_MS)
+                    .userAgent(DEFAULT_USER_AGENT)
+                    .followRedirects(false)
                     .execute();
             cookies = res.cookies();
 

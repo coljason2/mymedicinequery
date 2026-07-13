@@ -56,8 +56,8 @@
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
-            <version>1.10.1</version>
-            <!--20250527 目前只到到1.10.1 2至後會爬文有問題-->
+            <version>1.15.3</version>
+            <!-- 20250527 目前只到到1.10.1 2至後會爬文有問題 (已於 2026-07 升級為 1.15.3 以支援 Proxy) -->
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
