@@ -9,10 +9,12 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.*;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
+import java.util.Collections;
 import javax.net.ssl.*;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +59,45 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
             };
             SSLContext sc = SSLContext.getInstance("TLSv1.2");
             sc.init(null, trustAllCerts, new java.security.SecureRandom());
-            return sc.getSocketFactory();
+            SSLSocketFactory factory = sc.getSocketFactory();
+            
+            return new SSLSocketFactory() {
+                @Override
+                public String[] getDefaultCipherSuites() { return factory.getDefaultCipherSuites(); }
+                @Override
+                public String[] getSupportedCipherSuites() { return factory.getSupportedCipherSuites(); }
+                
+                private Socket enableSNI(Socket socket, String host) {
+                    if (socket instanceof SSLSocket) {
+                        SSLSocket sslSocket = (SSLSocket) socket;
+                        SSLParameters params = sslSocket.getSSLParameters();
+                        params.setServerNames(Collections.singletonList(new SNIHostName(host)));
+                        sslSocket.setSSLParameters(params);
+                    }
+                    return socket;
+                }
+
+                @Override
+                public Socket createSocket(Socket s, String host, int port, boolean autoClose) throws IOException {
+                    return enableSNI(factory.createSocket(s, host, port, autoClose), host);
+                }
+                @Override
+                public Socket createSocket(String host, int port) throws IOException {
+                    return enableSNI(factory.createSocket(host, port), host);
+                }
+                @Override
+                public Socket createSocket(String host, int port, InetAddress localHost, int localPort) throws IOException {
+                    return enableSNI(factory.createSocket(host, port, localHost, localPort), host);
+                }
+                @Override
+                public Socket createSocket(InetAddress host, int port) throws IOException {
+                    return factory.createSocket(host, port);
+                }
+                @Override
+                public Socket createSocket(InetAddress address, int port, InetAddress localAddress, int localPort) throws IOException {
+                    return factory.createSocket(address, port, localAddress, localPort);
+                }
+            };
         } catch (Exception e) {
             throw new RuntimeException("Failed to create SSLSocketFactory", e);
         }
