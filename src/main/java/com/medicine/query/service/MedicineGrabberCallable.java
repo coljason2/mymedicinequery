@@ -23,13 +23,26 @@ import java.util.regex.Pattern;
 public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
 
     private static final int TIMEOUT_MS = 60000;
-    private static final String TARGET_LOGIN_URL = "https://www.chahwa.com.tw/user.php";
-    private static final String getdrug = "https://www.chahwa.com.tw/order.php?act=query&&drug=";
     private static final Pattern reUnicode = Pattern.compile("\\\\u([0-9a-zA-Z]{4})");
     private static final LoginFormData form = new LoginFormData();
     private static final String DEFAULT_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36";
 
     private String queryName;
+
+    private static String getBaseUrl() {
+        String reverseProxyUrl = System.getenv("REVERSE_PROXY_URL");
+        return (reverseProxyUrl != null && !reverseProxyUrl.trim().isEmpty()) ? reverseProxyUrl : "https://www.chahwa.com.tw";
+    }
+
+    private static String getAuthHeader() {
+        String user = System.getenv("PROXY_USER");
+        String pass = System.getenv("PROXY_PASS");
+        if (user != null && pass != null) {
+            String auth = user + ":" + pass;
+            return "Basic " + Base64.getEncoder().encodeToString(auth.getBytes());
+        }
+        return null;
+    }
 
     public MedicineGrabberCallable(String queryName) {
         this.queryName = queryName;
@@ -78,7 +91,7 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
 
     public String getContext(String name, String cookiePara) {
         try {
-            String targetUrl = getdrug + URLEncoder.encode(name, "utf-8");
+            String targetUrl = getBaseUrl() + "/order.php?act=query&&drug=" + URLEncoder.encode(name, "utf-8");
             return executeGetRequest(targetUrl, cookiePara);
         } catch (Exception e) {
             log.error("Getcontext Error ", e);
@@ -88,7 +101,7 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
 
     public String getContextPage(String name, String cookiePara, int Now_page) {
         try {
-            String targetUrl = getdrug + URLEncoder.encode(name, "utf-8") + "&page=" + Now_page;
+            String targetUrl = getBaseUrl() + "/order.php?act=query&&drug=" + URLEncoder.encode(name, "utf-8") + "&page=" + Now_page;
             return executeGetRequest(targetUrl, cookiePara);
         } catch (Exception e) {
             log.error("Getcontext Error ", e);
@@ -96,26 +109,25 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
         }
     }
 
-    private Proxy getProxy() {
-        if ("true".equals(System.getenv("USE_PROXY"))) {
-            String host = System.getenv("PROXY_HOST");
-            String portStr = System.getenv("PROXY_PORT");
-            int port = (portStr != null && !portStr.isEmpty()) ? Integer.parseInt(portStr) : 808;
-            return new Proxy(Proxy.Type.HTTP, new InetSocketAddress(host, port));
-        }
-        return Proxy.NO_PROXY;
-    }
-
     private String executeGetRequest(String targetUrl, String cookiePara) throws Exception {
         StringBuilder context = new StringBuilder();
         URL getUrl = new URL(targetUrl);
-        HttpURLConnection connection = (HttpURLConnection) getUrl.openConnection(getProxy());
+        HttpURLConnection connection = (HttpURLConnection) getUrl.openConnection();
         connection.setRequestMethod("GET");
         connection.setDoOutput(true);
         connection.setConnectTimeout(TIMEOUT_MS);
         connection.setReadTimeout(TIMEOUT_MS);
         connection.setRequestProperty("User-Agent", DEFAULT_USER_AGENT);
         connection.addRequestProperty("Cookie", cookiePara);
+        
+        if (System.getenv("REVERSE_PROXY_URL") != null) {
+            connection.setRequestProperty("ngrok-skip-browser-warning", "69420");
+            String authHeader = getAuthHeader();
+            if (authHeader != null) {
+                connection.setRequestProperty("Authorization", authHeader);
+            }
+        }
+        
         connection.connect();
         
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
@@ -143,23 +155,31 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
         Map<String, String> cookies = null;
         String cookiePara = "";
         try {
-            if ("true".equals(System.getenv("USE_PROXY"))) {
-                log.info("Using Local Proxy for getCookies");
+            if (System.getenv("REVERSE_PROXY_URL") != null) {
+                log.info("Using Reverse Proxy for getCookies: {}", getBaseUrl());
             } else {
-                log.info("Not using Proxy for getCookies");
+                log.info("Not using Reverse Proxy for getCookies");
             }
 
             // 套用自訂 SSL 設定
-            Connection.Response res = Jsoup.connect(TARGET_LOGIN_URL)
-                    .proxy(getProxy())
+            Connection con = Jsoup.connect(getBaseUrl() + "/user.php")
                     .data("username", new String(Base64.getDecoder().decode(form.getUsername())), 
                           "password", new String(Base64.getDecoder().decode((form.getPassword()))), 
                           "wsrc", form.getWsrc(), "act", form.getAct(), "back_act", form.getBack_act())
                     .method(Connection.Method.POST)
                     .timeout(TIMEOUT_MS)
                     .userAgent(DEFAULT_USER_AGENT)
-                    .followRedirects(false)
-                    .execute();
+                    .followRedirects(false);
+            
+            if (System.getenv("REVERSE_PROXY_URL") != null) {
+                con.header("ngrok-skip-browser-warning", "69420");
+                String authHeader = getAuthHeader();
+                if (authHeader != null) {
+                    con.header("Authorization", authHeader);
+                }
+            }
+            
+            Connection.Response res = con.execute();
             cookies = res.cookies();
 
         } catch (Exception e) {
