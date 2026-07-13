@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
 public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
 
     private static final int TIMEOUT_MS = 60000;
-    private static final String SCRAPER_API_URL_TEMPLATE = "http://api.scraperapi.com?api_key=%s&country_code=tw&url=%s";
+    private static final String SCRAPER_API_URL_TEMPLATE = "http://api.scraperapi.com?api_key=%s&country_code=tw&keep_headers=true&url=%s";
     private static final String TARGET_LOGIN_URL = "https://www.chahwa.com.tw/user.php";
     private static final String getdrug = "https://www.chahwa.com.tw/order.php?act=query&&drug=";
     private static final Pattern reUnicode = Pattern.compile("\\\\u([0-9a-zA-Z]{4})");
@@ -48,8 +48,20 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
         String parseString = decode(getContext(queryName, cookie).replace("\\//", "")).replace("\\", "").replace("}", "")
                 .replace("{", "").replace("rn", "");
         Document resault = Jsoup.parse(parseString);
-        int total_page = Integer
-                .parseInt(resault.getElementsByClass("pagenavi").select("span").select("b").get(1).text());
+        int total_page = 1;
+        org.jsoup.select.Elements pagenavi = resault.getElementsByClass("pagenavi");
+        if (pagenavi != null && !pagenavi.isEmpty()) {
+            org.jsoup.select.Elements spanBs = pagenavi.select("span").select("b");
+            if (spanBs.size() > 1) {
+                try {
+                    total_page = Integer.parseInt(spanBs.get(1).text());
+                } catch (NumberFormatException e) {
+                    log.error("Parse total page error", e);
+                }
+            }
+        } else {
+            log.warn("Cannot find pagenavi, parseString content: {}", parseString);
+        }
         log.info("total_page = {}", total_page);
         if (total_page > 1) {
             for (int i = 1; i <= total_page; i++) {
