@@ -64,7 +64,14 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
     public String getContext(String name, String cookiePara) {
         StringBuilder context = new StringBuilder();
         try {
-            URL getUrl = new URL(getdrug + URLEncoder.encode(name, "utf-8"));
+            String targetUrl = getdrug + URLEncoder.encode(name, "utf-8");
+            String connectUrl = targetUrl;
+            if ("true".equals(System.getenv("USE_SCRAPER_API"))) {
+                String apiKey = System.getenv("SCRAPER_API_KEY");
+                String encodedUrl = URLEncoder.encode(targetUrl, "UTF-8");
+                connectUrl = "http://api.scraperapi.com?api_key=" + apiKey + "&country_code=tw&url=" + encodedUrl;
+            }
+            URL getUrl = new URL(connectUrl);
             HttpURLConnection connection = (HttpURLConnection) getUrl.openConnection();
             connection.setRequestMethod("GET");
             connection.setDoOutput(true);
@@ -88,7 +95,14 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
     public String getContextPage(String name, String cookiePara, int Now_page) {
         StringBuilder context = new StringBuilder();
         try {
-            URL getUrl = new URL(getdrug + URLEncoder.encode(name, "utf-8") + "&page=" + Now_page);
+            String targetUrl = getdrug + URLEncoder.encode(name, "utf-8") + "&page=" + Now_page;
+            String connectUrl = targetUrl;
+            if ("true".equals(System.getenv("USE_SCRAPER_API"))) {
+                String apiKey = System.getenv("SCRAPER_API_KEY");
+                String encodedUrl = URLEncoder.encode(targetUrl, "UTF-8");
+                connectUrl = "http://api.scraperapi.com?api_key=" + apiKey + "&country_code=tw&url=" + encodedUrl;
+            }
+            URL getUrl = new URL(connectUrl);
             HttpURLConnection connection = (HttpURLConnection) getUrl.openConnection();
             connection.setRequestMethod("GET");
             connection.setDoOutput(true);
