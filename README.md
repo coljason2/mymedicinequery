@@ -47,7 +47,21 @@ services:
   caddy:
     image: caddy:alpine
     container_name: local-caddy
-    command: caddy reverse-proxy --from :8080 --to https://www.XXXXX.com.tw --change-host-header
+    command:
+      - sh
+      - -c
+      - |
+        printf '%s' ':8080 {
+          reverse_proxy https://www.XXXXX.com.tw {
+            header_up Host {http.reverse_proxy.upstream.host}
+            header_up -X-Forwarded-For
+            header_up -X-Forwarded-Host
+            header_up -X-Forwarded-Proto
+            header_up -Authorization
+            header_up -Ngrok-Skip-Browser-Warning
+          }
+        }' > /etc/caddy/Caddyfile
+        caddy run --config /etc/caddy/Caddyfile --adapter caddyfile
     restart: always
   ngrok:
     image: ngrok/ngrok:latest
