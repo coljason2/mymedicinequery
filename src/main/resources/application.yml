@@ -4,7 +4,7 @@ server:
   maxPostSize: 4194304
   tomcat:
     threads:
-      max: 50
+      max: 20
 spring:
   main:
     lazy-initialization: true
@@ -13,7 +13,7 @@ spring:
   application:
     name: NewMedicineQuery
   thymeleaf:
-    cache: false
+    cache: true
     prefix: classpath:/templates/
     suffix: .html
     encoding: UTF-8
@@ -24,16 +24,15 @@ spring:
     time-zone: GMT+8
     date-format: yyyy-MM-dd HH:mm:ss
   profiles:
-    active: dev
+    active: prod
   http:
   devtools:
     restart:
-      enabled: true
+      enabled: false
   servlet:
     multipart:
       max-request-size: 50MB
       max-file-size: 50MB
-
 
 logging:
   level:
@@ -41,6 +40,9 @@ logging:
   file:
     name: "${spring.application.name}.log"
     path: "."
+    max-size: 10MB
+    max-history: 3
+    total-size-cap: 30MB
 
 management:
   health:
@@ -53,13 +55,11 @@ management:
       exposure:
         include: "health,info"
     jmx:
-      exposure:
-        include: "*"
+      enabled: false
   endpoint:
     health:
       show-details: always
     shutdown:
-      enabled: true
+      enabled: false
     jolokia:
-      enabled: true
-
+      enabled: false
