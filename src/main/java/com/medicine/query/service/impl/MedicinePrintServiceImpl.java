@@ -33,6 +33,20 @@ public class MedicinePrintServiceImpl implements MedicinePrintService {
         com.itextpdf.text.Document document = new com.itextpdf.text.Document();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
+        if (meds == null || meds.isEmpty()) {
+            try {
+                PdfWriter.getInstance(document, out);
+                document.open();
+                BaseFont bfChinese = BaseFont.createFont("MHei-Medium", "UniCNS-UCS2-H", BaseFont.NOT_EMBEDDED);
+                Font defaultFont = new Font(bfChinese, 14, 0);
+                document.add(new Paragraph("查無藥品資料", defaultFont));
+                document.close();
+            } catch (Exception e) {
+                log.error("Error creating empty PDF report", e);
+            }
+            return out;
+        }
+
         try {
 
             PdfPTable table = this.createTable();
@@ -44,35 +58,37 @@ public class MedicinePrintServiceImpl implements MedicinePrintService {
 
             document.open();
             String preCompany = meds.get(0).getCompany();
-            Paragraph title = new Paragraph("【" + meds.get(0).getCompany() + "】", new Font(bfChinese, 20, 0));
+            String displayCompany = (preCompany != null && !preCompany.trim().isEmpty()) ? preCompany : "大盤藥品清單";
+            Paragraph title = new Paragraph("【" + displayCompany + "】", new Font(bfChinese, 20, 0));
             for (MedEntity med : meds) {
-                if (!med.getCompany().equals(preCompany)) {
+                if (!java.util.Objects.equals(med.getCompany(), preCompany)) {
                     document.add(title);
                     document.add(new Paragraph(" ", font));
                     document.add(table);
                     document.newPage();
-                    title = new Paragraph("【" + med.getCompany() + "】", new Font(bfChinese, 20, 0));
+                    String curCompany = (med.getCompany() != null && !med.getCompany().trim().isEmpty()) ? med.getCompany() : "大盤藥品清單";
+                    title = new Paragraph("【" + curCompany + "】", new Font(bfChinese, 20, 0));
                     table = this.createTable();
                 }
 
                 PdfPCell cell;
 
-                cell = new PdfPCell(new Phrase(med.getName(), font));
+                cell = new PdfPCell(new Phrase(med.getName() != null ? med.getName() : "", font));
                 cell.setVerticalAlignment(com.itextpdf.text.Element.ALIGN_MIDDLE);
                 cell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
                 table.addCell(cell);
 
-                cell = new PdfPCell(new Phrase(med.getIsEnough(), font));
+                cell = new PdfPCell(new Phrase(med.getIsEnough() != null ? med.getIsEnough() : "", font));
                 cell.setVerticalAlignment(com.itextpdf.text.Element.ALIGN_MIDDLE);
                 cell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
                 table.addCell(cell);
 
-                cell = new PdfPCell(new Phrase(String.valueOf(med.getOid()), font));
+                cell = new PdfPCell(new Phrase(med.getOid() != null ? med.getOid() : "", font));
                 cell.setVerticalAlignment(com.itextpdf.text.Element.ALIGN_MIDDLE);
                 cell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
                 table.addCell(cell);
 
-                cell = new PdfPCell(new Phrase(String.valueOf(med.getOidPrice()), font));
+                cell = new PdfPCell(new Phrase(med.getOidPrice() != null ? med.getOidPrice() : "", font));
                 cell.setVerticalAlignment(com.itextpdf.text.Element.ALIGN_MIDDLE);
                 cell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
                 table.addCell(cell);
@@ -86,7 +102,7 @@ public class MedicinePrintServiceImpl implements MedicinePrintService {
             document.close();
 
         } catch (Exception ex) {
-            log.error("Error occurred: {0}", ex);
+            log.error("Error occurred while generating PDF", ex);
         }
         return out;
     }

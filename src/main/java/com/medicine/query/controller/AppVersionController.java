@@ -32,6 +32,12 @@ public class AppVersionController {
     /**
      * Web 後台版本調整頁面
      */
+    @GetMapping("/download")
+    public String showDownloadPage(Model model) {
+        model.addAttribute("config", appVersionService.getVersionConfig());
+        return "download";
+    }
+
     @GetMapping("/admin/version")
     public String showVersionPage(Model model) {
         model.addAttribute("config", appVersionService.getVersionConfig());
@@ -59,6 +65,12 @@ public class AppVersionController {
 
             if (formConfig.getForceUpdate() == null) {
                 formConfig.setForceUpdate(false);
+            }
+            if (formConfig.getNotice() != null && formConfig.getNotice().getEnable() == null) {
+                formConfig.getNotice().setEnable(false);
+            }
+            if (formConfig.getMaintenance() != null && formConfig.getMaintenance().getIsUnderMaintenance() == null) {
+                formConfig.getMaintenance().setIsUnderMaintenance(false);
             }
 
             appVersionService.updateVersionConfig(formConfig);

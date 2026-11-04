@@ -23,6 +23,7 @@ import java.io.ByteArrayInputStream;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -36,7 +37,7 @@ public class AppController {
     @Autowired
     private MedicinePrintService medicinePrintService;
 
-    @RequestMapping(value = {"/login", "/index"}, method = RequestMethod.GET)
+    @RequestMapping(value = "/login", method = RequestMethod.GET)
     public String login(ModelMap model) {
         return "login";
     }
@@ -52,9 +53,12 @@ public class AppController {
         try {
             log.info("querystring :{}", querystring);
             model.addAttribute("medCompanys", Constant.medCompanys);
-            model.addAttribute("meds", medicineService.getMedicine(querystring));
+            List<MedEntity> meds = medicineService.getMedicine(querystring);
+            model.addAttribute("meds", meds != null ? meds : Collections.emptyList());
         } catch (Exception e) {
-            throw new MedException(e);
+            log.error("POSTQuery error for [{}]: ", querystring, e);
+            model.addAttribute("meds", Collections.emptyList());
+            model.addAttribute("errorMessage", "查詢時發生異常（外部連線或代理逾時），請稍後再試。");
         }
         model.addAttribute("querystring", querystring);
         return "result :: resultFragment";
@@ -64,9 +68,12 @@ public class AppController {
     public String POSTQueryList(@RequestParam String querystring, Model model) {
         try {
             model.addAttribute("medCompanys", Constant.medCompanys);
-            model.addAttribute("meds", medicineService.getMedicineByList(querystring));
+            List<MedEntity> meds = medicineService.getMedicineByList(querystring);
+            model.addAttribute("meds", meds != null ? meds : Collections.emptyList());
         } catch (Exception e) {
-            throw new MedException(e);
+            log.error("POSTQuery error for [{}]: ", querystring, e);
+            model.addAttribute("meds", Collections.emptyList());
+            model.addAttribute("errorMessage", "查詢時發生異常（外部連線或代理逾時），請稍後再試。");
         }
         model.addAttribute("querystring", querystring);
         return "result :: resultFragment";
@@ -84,7 +91,8 @@ public class AppController {
         }
 
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Disposition", "inline;filename=\"" + querystring + ".pdf\"");
+        String encodedFilename = URLEncoder.encode(querystring, "UTF-8").replace("+", "%20");
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + encodedFilename + ".pdf\"; filename*=UTF-8''" + encodedFilename + ".pdf");
         return ResponseEntity
                 .ok()
                 .headers(headers)
@@ -104,6 +112,15 @@ public class AppController {
             rsp = medicineService.createQRcode(medicineService.getMedicine(querystring));
         }
 
+        if (rsp == null || rsp.getFileqrcode() == null) {
+            log.warn("IBON 雲端列印上傳失敗或未取得 QR Code");
+            model.addAttribute("fileCode", "");
+            model.addAttribute("fileNumber", "上傳失敗，請稍後重試");
+            model.addAttribute("querystring", querystring);
+            model.addAttribute("medCompanys", Constant.medCompanys);
+            return "qrcode";
+        }
+
         model.addAttribute("fileCode", rsp.getFileqrcode().trim());
         model.addAttribute("fileNumber", rsp.getPincode());
         model.addAttribute("querystring", querystring);
@@ -117,8 +134,9 @@ public class AppController {
         try {
             model.addAttribute("link", medicineService.createFDALink(acCode));
         } catch (Exception e) {
-            log.error("queryHealthCode", e);
-            throw new MedException(e);
+            log.error("queryHealthCode error for code [{}]: ", acCode, e);
+            model.addAttribute("link", "");
+            model.addAttribute("errorMessage", "查詢健保碼仿單時發生異常，請稍後再試。");
         }
         return "jump";
     }

@@ -15,16 +15,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     public void configure(WebSecurity web) {
-//        web.ignoring().antMatchers("/webjars/**");
-
-        web.ignoring().antMatchers("/resources/static/**")
-                .and().ignoring().antMatchers(
-                HttpMethod.GET,
-                "/*.html",
+        web.ignoring().antMatchers(
                 "/favicon.ico",
-                "/**/*.html",
-                "/**/*.css",
-                "/**/*.js"
+                "/css/**",
+                "/js/**",
+                "/images/**",
+                "/resources/static/**"
         );
     }
 
@@ -32,11 +28,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
 
         auth.inMemoryAuthentication()
-                .withUser("user").password("{noop}user123456").roles("USER")
+                .withUser("user").password("{noop}" + (System.getenv("APP_USER_PASS") != null ? System.getenv("APP_USER_PASS") : "user123456")).roles("USER")
                 .and()
-                .withUser("root").password("{noop}root").roles("USER")
+                .withUser("root").password("{noop}" + (System.getenv("APP_ROOT_PASS") != null ? System.getenv("APP_ROOT_PASS") : "root")).roles("USER")
                 .and()
-                .withUser("admin").password("{noop}admin123456").roles("USER", "ADMIN");
+                .withUser("admin").password("{noop}" + (System.getenv("APP_ADMIN_PASS") != null ? System.getenv("APP_ADMIN_PASS") : "admin123456")).roles("USER", "ADMIN");
 
     }
 
@@ -53,11 +49,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                     } else {
                         response.sendRedirect(request.getContextPath() + "/login");
                     }
-                });
+                })
+                .accessDeniedPage("/home");
 
         http
                 .authorizeRequests()
-                .antMatchers("/login", "/css/**", "/images/**", "/version.json", "/api/app/**").permitAll()
+                .antMatchers("/login", "/css/**", "/images/**", "/version.json", "/api/app/**", "/download", "/actuator/health").permitAll()
+                .antMatchers("/admin/**").hasRole("ADMIN")
                 .anyRequest()
                 .authenticated()
                 .and().formLogin()

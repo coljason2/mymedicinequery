@@ -8,6 +8,10 @@
 <body>
 
 <div class="container-fluid" id="main-content" th:fragment="resultFragment">
+    <!-- 查詢異常提示 -->
+    <div th:if="${errorMessage}" class="alert alert-danger" style="margin-bottom: 12px;">
+        <span class="glyphicon glyphicon-exclamation-sign"></span> <strong th:text="${errorMessage}"></strong>
+    </div>
     <!-- 頂部摘要列 (移植自 APP txtSummaryKeyword / txtSummaryCount) -->
     <div style="margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
         <div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">
@@ -19,7 +23,7 @@
             </span>
         </div>
         <div>
-            <a th:href="'/pdfreport?querystring='+${querystring}" target="_blank" class="btn btn-info btn-sm" style="font-size: 13px; padding: 5px 12px;">
+            <a th:href="@{/pdfreport(querystring=${querystring})}" target="_blank" class="btn btn-info btn-sm" style="font-size: 13px; padding: 5px 12px;">
                 <span class="glyphicon glyphicon-file"></span> 產生PDF
             </a>
         </div>

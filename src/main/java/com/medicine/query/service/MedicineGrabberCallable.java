@@ -16,7 +16,9 @@ import java.security.cert.X509Certificate;
 import java.util.Base64;
 import java.util.Collections;
 import javax.net.ssl.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -33,12 +35,12 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
 
     private String queryName;
 
-    private static String getBaseUrl() {
+    static String getBaseUrl() {
         String reverseProxyUrl = System.getenv("REVERSE_PROXY_URL");
         return (reverseProxyUrl != null && !reverseProxyUrl.trim().isEmpty()) ? reverseProxyUrl : "https://www.chahwa.com.tw";
     }
 
-    private static String getAuthHeader() {
+    static String getAuthHeader() {
         String user = System.getenv("PROXY_USER");
         String pass = System.getenv("PROXY_PASS");
         if (user != null && pass != null) {
@@ -48,7 +50,13 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
         return null;
     }
 
-    private static SSLSocketFactory getTrustAllSSLSocketFactory() {
+    private static final SSLSocketFactory TRUST_ALL_SSL_SOCKET_FACTORY = createTrustAllSSLSocketFactory();
+
+    static SSLSocketFactory getTrustAllSSLSocketFactory() {
+        return TRUST_ALL_SSL_SOCKET_FACTORY;
+    }
+
+    private static SSLSocketFactory createTrustAllSSLSocketFactory() {
         try {
             TrustManager[] trustAllCerts = new TrustManager[]{
                 new X509TrustManager() {
@@ -103,6 +111,15 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
         }
     }
 
+    private String cleanHtml(String raw) {
+        if (raw == null) {
+            return "";
+        }
+        return decode(raw.replace("\\//", ""))
+                .replace("\\r", "").replace("\\n", "").replace("\r", "").replace("\n", "")
+                .replace("\\", "").replace("}", "").replace("{", "");
+    }
+
     public MedicineGrabberCallable(String queryName) {
         this.queryName = queryName;
     }
@@ -115,10 +132,17 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
     public List<MedEntity> getMedicine(String queryName) {
 
         String cookie = getCookies();
-        List<MedEntity> meds = new CopyOnWriteArrayList<>();
+        List<MedEntity> meds = new ArrayList<>();
         // clean code
-        String parseString = decode(getContext(queryName, cookie).replace("\\//", "")).replace("\\", "").replace("}", "")
-                .replace("{", "").replace("rn", "");
+        String parseString = cleanHtml(getContext(queryName, cookie));
+
+        // 若大盤商 Session 在伺服端提早失效，自動清除快取並重試登入
+        if (parseString.contains("act_login") || parseString.contains("user.php?act=login") || parseString.contains("請登入")) {
+            log.warn("大盤商 Session 已在伺服端失效，重新執行登入刷新 Cookie...");
+            CrawlerSessionManager.invalidateCookie();
+            cookie = getCookies();
+            parseString = cleanHtml(getContext(queryName, cookie));
+        }
         Document resault = Jsoup.parse(parseString);
         int total_page = 1;
         org.jsoup.select.Elements pagenavi = resault.getElementsByClass("pagenavi");
@@ -135,15 +159,13 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
             log.warn("Cannot find pagenavi, parseString content: {}", parseString);
         }
         log.info("total_page = {}", total_page);
+        this.setResponseEntities(meds, resault, queryName);
         if (total_page > 1) {
-            for (int i = 1; i <= total_page; i++) {
-                parseString = decode(getContextPage(queryName, cookie, i).replace("\\//", "")).replace("\\", "")
-                        .replace("}", "").replace("{", "").replace("rn", "");
+            for (int i = 2; i <= total_page; i++) {
+                parseString = cleanHtml(getContextPage(queryName, cookie, i));
                 resault = Jsoup.parse(parseString);
                 this.setResponseEntities(meds, resault, queryName);
             }
-        } else {
-            this.setResponseEntities(meds, resault, queryName);
         }
         return meds;
     }
@@ -178,7 +200,6 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
         }
         
         connection.setRequestMethod("GET");
-        connection.setDoOutput(true);
         connection.setConnectTimeout(TIMEOUT_MS);
         connection.setReadTimeout(TIMEOUT_MS);
         connection.setRequestProperty("User-Agent", DEFAULT_USER_AGENT);
@@ -194,7 +215,7 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
         
         connection.connect();
         
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8))) {
             String lines;
             while ((lines = reader.readLine()) != null) {
                 context.append(decode(lines));
@@ -216,47 +237,9 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
     }
 
     public String getCookies() {
-        Map<String, String> cookies = null;
-        String cookiePara = "";
-        try {
-            if (System.getenv("REVERSE_PROXY_URL") != null) {
-                log.info("Using Reverse Proxy for getCookies: {}", getBaseUrl());
-            } else {
-                log.info("Not using Reverse Proxy for getCookies");
-            }
-
-            // 套用自訂 SSL 設定與強制 TLSv1.2
-            Connection con = Jsoup.connect(getBaseUrl() + "/user.php")
-                    .sslSocketFactory(getTrustAllSSLSocketFactory())
-                    .data("username", new String(Base64.getDecoder().decode(form.getUsername())), 
-                          "password", new String(Base64.getDecoder().decode((form.getPassword()))), 
-                          "wsrc", form.getWsrc(), "act", form.getAct(), "back_act", form.getBack_act())
-                    .method(Connection.Method.POST)
-                    .timeout(TIMEOUT_MS)
-                    .userAgent(DEFAULT_USER_AGENT)
-                    .followRedirects(false);
-            
-            if (System.getenv("REVERSE_PROXY_URL") != null) {
-                con.header("ngrok-skip-browser-warning", "69420");
-                String authHeader = getAuthHeader();
-                if (authHeader != null) {
-                    con.header("Authorization", authHeader);
-                }
-            }
-            
-            Connection.Response res = con.execute();
-            cookies = res.cookies();
-
-        } catch (Exception e) {
-            log.error("getCookies Error ", e);
-            throw new MedException(e);
-        }
-        for (String cookie : cookies.keySet()) {
-            cookiePara = cookiePara + cookie.toString() + "=" + cookies.get(cookie) + ";";
-        }
-        // log.info(cookiePara.toString());
-        return cookiePara;
+        return CrawlerSessionManager.getValidCookie();
     }
+
 
     private void setResponseEntities(List<MedEntity> meds, Document resault, String company) {
         for (org.jsoup.nodes.Element n : resault.getElementsByClass("item_text")) {

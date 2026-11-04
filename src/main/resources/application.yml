@@ -12,12 +12,16 @@ spring:
     enabled: false
   application:
     name: NewMedicineQuery
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=300,expireAfterWrite=45m
   thymeleaf:
     cache: true
     prefix: classpath:/templates/
     suffix: .html
     encoding: UTF-8
-    mode: LEGACYHTML5
+    mode: HTML
     servlet:
       content-type: text/html
   jackson:
@@ -25,7 +29,6 @@ spring:
     date-format: yyyy-MM-dd HH:mm:ss
   profiles:
     active: prod
-  http:
   devtools:
     restart:
       enabled: false

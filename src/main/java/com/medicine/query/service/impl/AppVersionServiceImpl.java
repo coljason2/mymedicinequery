@@ -138,10 +138,14 @@ public class AppVersionServiceImpl implements AppVersionService {
             if (parent != null && !parent.exists()) {
                 parent.mkdirs();
             }
-            try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8)) {
+            File tempFile = new File(file.getAbsolutePath() + ".tmp");
+            try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(tempFile), StandardCharsets.UTF_8)) {
                 objectMapper.writeValue(writer, config);
             }
-            log.info("Successfully persisted AppVersionConfig to {}", file.getAbsolutePath());
+            java.nio.file.Files.move(tempFile.toPath(), file.toPath(),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING,
+                    java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+            log.info("Successfully persisted AppVersionConfig atomically to {}", file.getAbsolutePath());
         } catch (Exception e) {
             log.error("Failed to persist AppVersionConfig to {}", CONFIG_FILE_PATH, e);
         }

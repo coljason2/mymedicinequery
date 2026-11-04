@@ -27,7 +27,10 @@
             </form>
 
             <ul class="nav navbar-nav">
-                <li><a href="/admin/version"><span class="glyphicon glyphicon-cog"></span> APP版本管理</a></li>
+                <li><a href="/download"><span class="glyphicon glyphicon-phone"></span> 下載APP</a></li>
+                <li th:if="${#httpServletRequest != null and #httpServletRequest.isUserInRole('ADMIN')}">
+                    <a href="/admin/version"><span class="glyphicon glyphicon-cog"></span> APP版本管理</a>
+                </li>
             </ul>
             <ul class="nav navbar-nav">
                 <li><a href="javascript:void(0)" style="cursor:default;">藥品公司查詢</a></li>

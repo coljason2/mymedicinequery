@@ -5,7 +5,7 @@
 <body>
 <div class="container">
     <h2>Redirecting...</h2>
-    <a id="jumpLink" th:utext="${link}"></a>
+    <a id="jumpLink" th:text="${link}"></a>
     <script>
         var linkElement = document.getElementById("jumpLink");
         if (linkElement !== '') {

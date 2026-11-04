@@ -1,11 +1,13 @@
 package com.medicine.query.service.impl;
 
-
-import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.medicine.query.exception.MedException;
-import com.medicine.query.model.*;
+import com.medicine.query.model.IbonRsp;
+import com.medicine.query.model.LoginFormData;
+import com.medicine.query.model.MedEntity;
+import com.medicine.query.model.UpPdfRsp;
 import com.medicine.query.service.MedicineGrabberCallable;
 import com.medicine.query.service.MedicinePrintService;
 import com.medicine.query.service.MedicineService;
@@ -13,25 +15,24 @@ import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.util.*;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+import java.io.IOException;
 import java.security.cert.CertificateException;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
-
-@Deprecated
 @Slf4j
 @Service
 public class MedicineServiceImpl implements MedicineService {
-
 
     private static final String uploadPath = "https://printadmin.ibon.com.tw/IbonUpload/IbonUpload/LocalFileUpload";
     private static final String postPath = "https://printadmin.ibon.com.tw/IbonUpload/IbonUpload/IbonFileUpload";
@@ -47,28 +48,27 @@ public class MedicineServiceImpl implements MedicineService {
     private ExecutorService executorService;
 
     @Override
+    @Cacheable(value = "medicine", key = "#queryName", unless = "#result == null or #result.isEmpty()")
     public List<MedEntity> getMedicine(String queryName) {
         try {
             if (StringUtils.isBlank(queryName)) {
                 throw new MedException("查詢空白");
             }
 
-            MedicineGrabberCallable callable = new MedicineGrabberCallable(queryName);
+            MedicineGrabberCallable callable = new MedicineGrabberCallable(queryName.trim());
             Future<List<MedEntity>> future = executorService.submit(callable);
 
             return future.get();
         } catch (Exception e) {
-            log.error("getMedicine :{} ", e);
-            return null;
+            log.error("getMedicine error for queryName [{}]: ", queryName, e);
+            return Collections.emptyList();
         }
     }
 
-
     @Override
     public IbonRsp createQRcode(List<MedEntity> meds) {
-
         String hash = UUID.randomUUID().toString();
-        RequestBody fileBody = RequestBody.create(medicinePrintService.createPdfOutputStream(meds).toByteArray(), MediaType.parse("pdf"));
+        RequestBody fileBody = RequestBody.create(medicinePrintService.createPdfOutputStream(meds).toByteArray(), MediaType.parse("application/pdf"));
         RequestBody requestBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM).addFormDataPart("file", "", fileBody)
                 .addFormDataPart("fileName", "meds.pdf")
@@ -79,21 +79,25 @@ public class MedicineServiceImpl implements MedicineService {
                 .post(requestBody)
                 .build();
 
-
-        UpPdfRsp respEntity = null;
         IbonRsp ibonResp = new IbonRsp();
-        Response response = null;
-        String jsonString = null;
-        try {
-            response = client.newCall(request).execute();
-            jsonString = response.body().string().toLowerCase();
-            respEntity = mapper.readValue(jsonString, UpPdfRsp.class);
-            log.info("respEntity = {} ", respEntity);
+        try (Response response = client.newCall(request).execute()) {
+            if (response.body() == null) {
+                throw new MedException("檔案上傳無回應");
+            }
+            String jsonString = response.body().string().toLowerCase();
+            UpPdfRsp respEntity = mapper.readValue(jsonString, UpPdfRsp.class);
+            log.info("respEntity = {}", respEntity);
+
             if ("00".equals(respEntity.getResultcode())) {
+                String ibonUser = (System.getenv("IBON_USER") != null && !System.getenv("IBON_USER").trim().isEmpty())
+                        ? System.getenv("IBON_USER") : "zzshcool";
+                String ibonEmail = (System.getenv("IBON_EMAIL") != null && !System.getenv("IBON_EMAIL").trim().isEmpty())
+                        ? System.getenv("IBON_EMAIL") : "zzshcool@gmail.com";
+
                 RequestBody formBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
                         .addFormDataPart("hash", respEntity.getHash())
-                        .addFormDataPart("user", "zzshcool")
-                        .addFormDataPart("email", "zzshcool@gmail.com")
+                        .addFormDataPart("user", ibonUser)
+                        .addFormDataPart("email", ibonEmail)
                         .build();
 
                 Headers headers = new Headers.Builder()
@@ -103,8 +107,8 @@ public class MedicineServiceImpl implements MedicineService {
                         .add("sec-fetch-dest", "empty")
                         .add("sec-fetch-mode", "cors")
                         .add("sec-fetch-site", "same-site")
-                        .add("accept", "/*")
-                        .add("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.122 Safari/537.36")
+                        .add("accept", "*/*")
+                        .add("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
                         .build();
 
                 Request postReq = new Request.Builder()
@@ -113,53 +117,74 @@ public class MedicineServiceImpl implements MedicineService {
                         .post(formBody)
                         .build();
 
-                response = client.newCall(postReq).execute();
-                JsonNode rootNode = mapper.readTree(response.body().string());
-                log.info("jsonString = {} ", jsonString);
-                ibonResp.setPincode(rootNode.get("Pincode").asText());
-                ibonResp.setFileqrcode(rootNode.get("FileQrcode").asText());
-
+                try (Response postResponse = client.newCall(postReq).execute()) {
+                    if (postResponse.body() != null) {
+                        JsonNode rootNode = mapper.readTree(postResponse.body().string());
+                        ibonResp.setPincode(rootNode.hasNonNull("Pincode") ? rootNode.get("Pincode").asText() : "");
+                        ibonResp.setFileqrcode(rootNode.hasNonNull("FileQrcode") ? rootNode.get("FileQrcode").asText() : "");
+                    }
+                }
             } else {
                 throw new MedException("檔案上傳錯誤!!!");
             }
-            log.info("ibonResp = {} ", ibonResp);
+            log.info("ibonResp = {}", ibonResp);
             return ibonResp;
         } catch (Exception e) {
-            log.error("upload Exception ", e);
+            log.error("upload Exception: ", e);
+            return null;
         }
-        return null;
+    }
+
+    public static String canonicalizeCompanyList(String strList) {
+        if (StringUtils.isBlank(strList)) {
+            return "";
+        }
+        return Arrays.stream(strList.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .sorted()
+                .collect(Collectors.joining(","));
     }
 
     @Override
+    @Cacheable(value = "medicineList", key = "T(com.medicine.query.service.impl.MedicineServiceImpl).canonicalizeCompanyList(#strList)", unless = "#result == null or #result.isEmpty()")
     public List<MedEntity> getMedicineByList(String strList) {
-        List<String> namesList = Arrays.asList(strList.split(","));
-        List<MedEntity> medList = new ArrayList<>();
-        List<Future<List<MedEntity>>> futureList = new CopyOnWriteArrayList<>();
-        namesList.parallelStream().forEachOrdered(company -> {
-            MedicineGrabberCallable callable = new MedicineGrabberCallable(company);
-            Future<List<MedEntity>> future = executorService.submit(callable);
-            futureList.add(future);
-        });
+        String canonical = canonicalizeCompanyList(strList);
+        if (canonical.isEmpty()) {
+            return Collections.emptyList();
+        }
 
-        futureList.parallelStream().forEachOrdered(f -> {
-            try {
-                medList.addAll(f.get());
-            } catch (Exception e) {
-                log.error("future get error :{} ", e);
+        List<String> namesList = Arrays.asList(canonical.split(","));
+        List<Future<List<MedEntity>>> futureList = new ArrayList<>();
+
+        for (String company : namesList) {
+            String trimmed = company.trim();
+            if (!trimmed.isEmpty()) {
+                MedicineGrabberCallable callable = new MedicineGrabberCallable(trimmed);
+                futureList.add(executorService.submit(callable));
             }
-        });
+        }
+
+        // 線程安全的循序匯總多執行緒爬取結果
+        List<MedEntity> medList = new ArrayList<>();
+        for (Future<List<MedEntity>> f : futureList) {
+            try {
+                List<MedEntity> res = f.get();
+                if (res != null) {
+                    medList.addAll(res);
+                }
+            } catch (Exception e) {
+                log.error("future get error in getMedicineByList: ", e);
+            }
+        }
 
         Collections.sort(medList, new MedEntity());
-        //log.info("list :{} ", medList);
         return medList;
     }
 
     @Override
     public String createFDALink(String code) {
-        // Create a JSONObject
-        JSONObject jsonObject = new JSONObject();
-
-        // Add key-value pairs to the JSONObject
+        ObjectNode jsonObject = mapper.createObjectNode();
         jsonObject.put("DRUG_CODE", code);
         jsonObject.put("DRUG_NAME", "");
         jsonObject.put("DRUG_DOSE", "");
@@ -179,30 +204,31 @@ public class MedicineServiceImpl implements MedicineService {
         jsonObject.put("CURPAGE", 1);
         jsonObject.put("PAGESIZE", 50);
 
-
         MediaType mediaType = MediaType.parse("application/json");
-        RequestBody body = RequestBody.create(mediaType, jsonObject.toJSONString());
+        RequestBody body = RequestBody.create(mediaType, jsonObject.toString());
         Request request = new Request.Builder()
                 .url("https://info.nhi.gov.tw/api/INAE3000/INAE3000S01/SQL0001")
                 .method("POST", body)
                 .addHeader("Content-Type", "application/json")
                 .build();
 
-        Response response = null;
-        JSONObject rsp;
         String resultLink = fdaLink;
-        try {
-            response = client.newCall(request).execute();
-            rsp = JSONObject.parseObject(response.body().string());
-            if (Objects.nonNull(rsp.getJSONArray("data")) && rsp.getJSONArray("data").size() > 0) {
-                resultLink = fdaLink + rsp.getJSONArray("data").getJSONObject(0).getString("doH_ID");
+        try (Response response = client.newCall(request).execute()) {
+            if (response.body() != null) {
+                JsonNode rsp = mapper.readTree(response.body().string());
+                JsonNode dataArray = rsp.get("data");
+                if (dataArray != null && dataArray.isArray() && dataArray.size() > 0) {
+                    JsonNode firstItem = dataArray.get(0);
+                    if (firstItem.hasNonNull("doH_ID")) {
+                        resultLink = fdaLink + firstItem.get("doH_ID").asText();
+                    }
+                }
             }
-
-            log.info("resultLink:{}", resultLink);
+            log.info("resultLink: {}", resultLink);
         } catch (IOException e) {
+            log.error("createFDALink error for code [{}]: ", code, e);
             throw new RuntimeException(e);
         }
-
 
         return resultLink;
     }
@@ -228,6 +254,9 @@ public class MedicineServiceImpl implements MedicineService {
             final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
 
             return new OkHttpClient.Builder()
+                    .connectTimeout(60, TimeUnit.SECONDS)
+                    .readTimeout(60, TimeUnit.SECONDS)
+                    .writeTimeout(60, TimeUnit.SECONDS)
                     .sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0])
                     .hostnameVerifier((hostname, session) -> true)
                     .build();
