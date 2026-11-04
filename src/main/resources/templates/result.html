@@ -8,37 +8,132 @@
 <body>
 
 <div class="container-fluid" id="main-content" th:fragment="resultFragment">
+    <!-- 頂部摘要列 (移植自 APP txtSummaryKeyword / txtSummaryCount) -->
+    <div style="margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+        <div>
+            <span class="label label-primary" style="font-size: 13px; padding: 6px 12px; margin-right: 8px;">
+                <span class="glyphicon glyphicon-search"></span> 查詢關鍵字：<strong th:text="${querystring}"></strong>
+            </span>
+            <span class="label label-info" style="font-size: 13px; padding: 6px 12px;">
+                共 <strong th:text="${#lists.size(meds)}">0</strong> 筆大盤藥品
+            </span>
+        </div>
+        <div>
+            <a th:href="'/pdfreport?querystring='+${querystring}" target="_blank" class="btn btn-info btn-sm">
+                <span class="glyphicon glyphicon-file"></span> 產生PDF
+            </a>
+        </div>
+    </div>
+
     <div class="table-responsive">
-        <table id="exportdata" class="table table-striped" width="100%" cellspacing="0">
+        <table id="exportdata" class="table table-striped table-hover" width="100%" cellspacing="0">
             <thead>
-            <tr>
-                <td>藥名</td>
-                <td>藥價/庫存</td>
-                <td>健保碼</td>
-                <td>健保價</td>
+            <tr style="background-color: #f5f5f5;">
+                <th style="min-width: 180px;">藥名</th>
+                <th style="min-width: 140px;">藥價/庫存</th>
+                <th style="min-width: 150px;">健保碼</th>
+                <th style="min-width: 100px;">健保價</th>
             </tr>
             </thead>
             <tbody>
             <tr th:each="item: ${meds}">
-                <td th:text="${item.name}"/>
-                <td th:text="${item.isEnough}"/>
+                <!-- 藥名 (加粗與深色，比照 APP txtName) -->
                 <td>
-                    <span th:if="${item.oid != null and item.oid.matches('^[a-zA-Z]{2}[0-9a-zA-Z]{8}$')}">
-                        <a th:href="'/query/health/code/'+${item.oid}" target="_blank"><span th:text="${item.oid}"/></a>
-                    </span>
-                    <span th:unless="${item.oid != null and item.oid.matches('^[a-zA-Z]{2}[0-9a-zA-Z]{8}$')}">
-                        <span th:text="${item.oid}"/>
-                    </span>
+                    <span style="font-weight: bold; color: #0D47A1;" th:text="${item.name}"></span>
+                    <span th:if="${item.company != null and !#strings.isEmpty(item.company)}" class="text-muted" style="font-size: 12px; margin-left: 4px;" th:text="'(' + ${item.company} + ')'"></span>
                 </td>
-                <td th:text="${item.oidPrice}"/>
+
+                <!-- 藥價/庫存 (融入 APP txtStockBadge 狀態徽章與高亮批發價) -->
+                <td>
+                    <span th:if="${item.isEnough != null}">
+                        <span th:if="${#strings.contains(item.isEnough, '缺貨') or #strings.contains(item.isEnough, '斷貨') or #strings.contains(item.isEnough, '售完')}" 
+                              class="label label-danger" style="margin-right: 6px; font-size: 11px;">缺貨</span>
+                        <span th:if="${#strings.contains(item.isEnough, '供貨') or #strings.contains(item.isEnough, '正常') or #strings.contains(item.isEnough, '充足')}" 
+                              class="label label-success" style="margin-right: 6px; font-size: 11px;">供貨中</span>
+                        <span style="font-weight: bold; color: #D32F2F;" th:text="${item.isEnough}"></span>
+                    </span>
+                    <span th:unless="${item.isEnough != null}" class="text-muted">洽大盤</span>
+                </td>
+
+                <!-- 健保碼 (融入 APP btnCopy 快速複製按鈕 + 仿單連結) -->
+                <td>
+                    <div style="display: flex; align-items: center; white-space: nowrap;">
+                        <span th:if="${item.oid != null and item.oid.matches('^[a-zA-Z]{2}[0-9a-zA-Z]{8}$')}">
+                            <a th:href="'/query/health/code/'+${item.oid}" target="_blank" title="點選開啟食藥署仿單與健保詳細資訊" style="font-weight: bold; color: #1565C0; text-decoration: underline;">
+                                <span th:text="${item.oid}"></span>
+                            </a>
+                            <button type="button" class="btn btn-default btn-xs" th:data-code="${item.oid}" onclick="copyMedCode(this)" style="margin-left: 8px; padding: 2px 8px; font-size: 11px; border-radius: 4px;" title="複製健保碼">
+                                <span class="glyphicon glyphicon-copy"></span> 複製
+                            </button>
+                        </span>
+                        <span th:unless="${item.oid != null and item.oid.matches('^[a-zA-Z]{2}[0-9a-zA-Z]{8}$')}">
+                            <span th:text="${item.oid != null and !#strings.isEmpty(item.oid) ? item.oid : '無健保碼'}" class="text-muted"></span>
+                            <button th:if="${item.oid != null and !#strings.isEmpty(item.oid) and item.oid != '無健保碼'}"
+                                    type="button" class="btn btn-default btn-xs" th:data-code="${item.oid}" onclick="copyMedCode(this)" style="margin-left: 8px; padding: 2px 8px; font-size: 11px; border-radius: 4px;" title="複製代碼">
+                                <span class="glyphicon glyphicon-copy"></span> 複製
+                            </button>
+                        </span>
+                    </div>
+                </td>
+
+                <!-- 健保價 (融入 APP cleanHid 綠色核定價與無給付防呆) -->
+                <td>
+                    <span th:if="${item.oidPrice != null and !#strings.isEmpty(#strings.trim(item.oidPrice)) and item.oidPrice != '0' and item.oidPrice != '0.00'}"
+                          style="font-weight: bold; color: #00695C;"
+                          th:text="${item.oidPrice}">
+                    </span>
+                    <span th:unless="${item.oidPrice != null and !#strings.isEmpty(#strings.trim(item.oidPrice)) and item.oidPrice != '0' and item.oidPrice != '0.00'}"
+                          class="text-muted" style="font-size: 12px;">無給付</span>
+                </td>
             </tr>
             </tbody>
         </table>
     </div>
     <br/>
-    <a th:href="'/pdfreport?querystring='+${querystring}" target="_blank" class="btn btn-info">產生PDF</a>
-    
+
     <script>
+        function copyMedCode(btn) {
+            var code = btn.getAttribute('data-code');
+            if (!code) return;
+
+            function onSuccess() {
+                var originalHtml = btn.innerHTML;
+                btn.innerHTML = '<span class="glyphicon glyphicon-ok"></span> 已複製';
+                btn.classList.remove('btn-default');
+                btn.classList.add('btn-success');
+                setTimeout(function() {
+                    btn.innerHTML = originalHtml;
+                    btn.classList.remove('btn-success');
+                    btn.classList.add('btn-default');
+                }, 1500);
+            }
+
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(code).then(onSuccess).catch(function() {
+                    fallbackCopy(code, onSuccess);
+                });
+            } else {
+                fallbackCopy(code, onSuccess);
+            }
+        }
+
+        function fallbackCopy(text, callback) {
+            var textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-999999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                if (callback) callback();
+            } catch (err) {
+                alert("複製失敗，請手動選取複製");
+            }
+            document.body.removeChild(textArea);
+        }
+
         $(function () {
             // Destroy existing DataTable if any
             if ($.fn.DataTable.isDataTable('#exportdata')) {

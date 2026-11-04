@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="components/header :: header">
+    <title>APP 版本與設定管理</title>
+</head>
+<nav class="navbar navbar-custom navbar-fixed-top" th:include="components/nav :: nav"></nav>
+<body>
+
+<div class="container" id="main-content" style="margin-top: 30px; margin-bottom: 50px;">
+
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <div class="page-header">
+                <h2><span class="glyphicon glyphicon-phone"></span> APP 版本與設定管理</h2>
+                <p class="text-muted">在此調整 Android APP 檢查更新時讀取的版本號碼、下載連結與公告維護設定，儲存後即時生效。</p>
+            </div>
+
+            <!-- 成功訊息提示 -->
+            <div th:if="${successMessage}" class="alert alert-success alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <strong><span class="glyphicon glyphicon-ok-sign"></span> 成功！</strong> <span th:text="${successMessage}"></span>
+            </div>
+
+            <!-- 錯誤訊息提示 -->
+            <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <strong><span class="glyphicon glyphicon-exclamation-sign"></span> 錯誤！</strong> <span th:text="${errorMessage}"></span>
+            </div>
+
+            <form th:action="@{/admin/version}" method="post">
+                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+
+                <!-- 1. 版本控制面板 -->
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        <h3 class="panel-title"><span class="glyphicon glyphicon-upload"></span> 核心版本資訊</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-md-6 form-group">
+                                <label for="versionCode">版號代碼 (versionCode) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="versionCode" name="versionCode"
+                                       th:value="${config.versionCode}" required min="1" placeholder="例如：4">
+                                <small class="text-muted">整數數字。APP 判斷此值大於手機端版本時即會觸發更新提示。</small>
+                            </div>
+                            <div class="col-md-6 form-group">
+                                <label for="versionName">版本名稱 (versionName) <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="versionName" name="versionName"
+                                       th:value="${config.versionName}" required placeholder="例如：3.6">
+                                <small class="text-muted">顯示給使用者看的版本號文字。</small>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="downloadUrl">APK 下載網址 (downloadUrl) <span class="text-danger">*</span></label>
+                            <input type="url" class="form-control" id="downloadUrl" name="downloadUrl"
+                                   th:value="${config.downloadUrl}" required placeholder="https://drive.google.com/file/d/...">
+                            <small class="text-muted">使用者點擊「立即更新」後瀏覽器開啟的下載連結。</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="updateLog">更新日誌 (updateLog)</label>
+                            <textarea class="form-control" id="updateLog" name="updateLog" rows="4"
+                                      th:text="${config.updateLog}" placeholder="1. 修復問題&#10;2. 效能優化"></textarea>
+                            <small class="text-muted">換行將於 APP 更新對話框中完整保留呈現。</small>
+                        </div>
+
+                        <div class="checkbox">
+                            <label style="font-weight: bold; color: #c9302c;">
+                                <input type="checkbox" name="forceUpdate" value="true"
+                                       th:checked="${config.forceUpdate}"> 強制更新 (forceUpdate)
+                            </label>
+                            <span class="help-block" style="margin-left: 20px;">勾選後，舊版使用者無法略過更新對話框，必須下載新版才可繼續操作。</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. 系統公告設定 -->
+                <div class="panel panel-info">
+                    <div class="panel-heading">
+                        <h3 class="panel-title"><span class="glyphicon glyphicon-bullhorn"></span> 系統公告廣播 (notice)</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="checkbox">
+                            <label style="font-weight: bold;">
+                                <input type="checkbox" name="notice.enable" value="true"
+                                       th:checked="${config.notice != null and config.notice.enable}"> 啟用首頁公告彈窗
+                            </label>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3 form-group">
+                                <label for="noticeId">公告編號 (id)</label>
+                                <input type="number" class="form-control" id="noticeId" name="notice.id"
+                                       th:value="${config.notice != null ? config.notice.id : 1}">
+                            </div>
+                            <div class="col-md-9 form-group">
+                                <label for="noticeTitle">公告標題</label>
+                                <input type="text" class="form-control" id="noticeTitle" name="notice.title"
+                                       th:value="${config.notice != null ? config.notice.title : '系統公告'}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="noticeMessage">公告內文</label>
+                            <input type="text" class="form-control" id="noticeMessage" name="notice.message"
+                                   th:value="${config.notice != null ? config.notice.message : '大盤資料庫目前正常運作中。'}">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. 維護模式設定 -->
+                <div class="panel panel-warning">
+                    <div class="panel-heading">
+                        <h3 class="panel-title"><span class="glyphicon glyphicon-wrench"></span> 系統維護模式 (maintenance)</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="checkbox">
+                            <label style="font-weight: bold; color: #8a6d3b;">
+                                <input type="checkbox" name="maintenance.isUnderMaintenance" value="true"
+                                       th:checked="${config.maintenance != null and config.maintenance.isUnderMaintenance}"> 開啟維護模式（APP 端將顯示維護提示）
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label for="maintMessage">維護提示文字</label>
+                            <input type="text" class="form-control" id="maintMessage" name="maintenance.message"
+                                   th:value="${config.maintenance != null ? config.maintenance.message : '系統維護中，請稍候再試。'}">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 底部按鈕區 -->
+                <div class="form-group text-right">
+                    <a href="/home" class="btn btn-default" style="margin-right: 10px;">返回首頁</a>
+                    <a href="/version.json" target="_blank" class="btn btn-info" style="margin-right: 10px;">
+                        <span class="glyphicon glyphicon-eye-open"></span> 檢視目前 JSON 端點
+                    </a>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <span class="glyphicon glyphicon-floppy-disk"></span> 儲存版本設定
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+
+<footer class="footer" th:include="components/footer :: footer"></footer>
+</body>
+</html>
+
