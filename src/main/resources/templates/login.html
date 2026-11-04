@@ -2,80 +2,217 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>福誠查藥系統登入</title>
+    <title>福誠查藥系統 - 登入</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <script>
+        (function () {
+            var savedTheme = localStorage.getItem('app_theme');
+            var theme = savedTheme;
+            if (!theme) {
+                theme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+            }
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+
+        function toggleTheme() {
+            var current = document.documentElement.getAttribute('data-theme') || 'light';
+            var next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('app_theme', next);
+            var label = document.getElementById('theme-toggle-text');
+            if (label) label.textContent = next === 'dark' ? '切換亮色模式' : '切換暗色模式';
+        }
+    </script>
     <style>
+        :root {
+            --bg-body: #f3f5f8;
+            --bg-card: #ffffff;
+            --border-color: #cbd5e1;
+            --border-subtle: #e2e8f0;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --input-bg: #ffffff;
+            --input-border: #cbd5e1;
+            --input-text: #0f172a;
+            --primary-color: #1d4ed8;
+            --primary-hover: #1e40af;
+        }
+
+        [data-theme="dark"] {
+            --bg-body: #0f141c;
+            --bg-card: #18202c;
+            --border-color: #334155;
+            --border-subtle: #263244;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --input-bg: #222d3d;
+            --input-border: #3b495e;
+            --input-text: #f8fafc;
+            --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
+        }
+
         body {
-            background-color: #f4f6f9;
-            font-family: "Helvetica Neue", Helvetica, Arial, "微軟正黑體", "Microsoft JhengHei", sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: "Microsoft JhengHei", "微軟正黑體", "PingFang TC", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             display: flex;
             align-items: center;
             justify-content: center;
             height: 100vh;
             margin: 0;
+            padding: 20px;
+            font-size: 16px;
+            transition: background-color 0.15s ease, color 0.15s ease;
         }
+
         .login-card {
-            background-color: #ffffff;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-subtle);
             border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             width: 100%;
-            max-width: 400px;
-            padding: 40px 30px;
+            max-width: 420px;
+            padding: 36px 32px;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+        }
+
+        .login-card h3 {
+            margin: 0 0 8px 0;
+            font-weight: 700;
+            font-size: 24px;
             text-align: center;
         }
-        .login-card h2 {
-            color: #1e88e5;
-            margin-bottom: 30px;
-            font-weight: bold;
-        }
-        .form-control {
-            border-radius: 4px;
-            height: 45px;
+
+        .login-card .subtitle {
             font-size: 16px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-bottom: 28px;
         }
+
+        .form-control {
+            background-color: var(--input-bg);
+            border: 1px solid var(--input-border);
+            color: var(--input-text);
+            border-radius: 6px;
+            height: 46px;
+            font-size: 17px;
+            padding: 8px 14px;
+            box-shadow: none;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15);
+            background-color: var(--input-bg);
+            color: var(--input-text);
+        }
+
         .btn-primary {
-            background-color: #1e88e5;
-            border-color: #1565c0;
-            height: 45px;
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            height: 46px;
             font-size: 18px;
-            font-weight: bold;
-            border-radius: 4px;
+            font-weight: 700;
+            border-radius: 6px;
             width: 100%;
-            margin-top: 20px;
+            margin-top: 12px;
         }
+
         .btn-primary:hover {
-            background-color: #1565c0;
-            border-color: #0d47a1;
+            background-color: var(--primary-hover);
+            border-color: var(--primary-hover);
         }
+
         .error-message {
-            color: #e53935;
-            margin-bottom: 15px;
+            background-color: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #dc2626;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 18px;
+            text-align: center;
         }
+
+        [data-theme="dark"] .error-message {
+            color: #f87171;
+        }
+
         .logout-message {
-            color: #43a047;
-            margin-bottom: 15px;
+            background-color: rgba(34, 197, 94, 0.12);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #16a34a;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 18px;
+            text-align: center;
+        }
+
+        [data-theme="dark"] .logout-message {
+            color: #4ade80;
+        }
+
+        .theme-toggle-link {
+            display: inline-block;
+            margin-top: 22px;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-decoration: none;
+            cursor: pointer;
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-body);
+            padding: 6px 14px;
+            border-radius: 6px;
+        }
+
+        .theme-toggle-link:hover {
+            color: var(--text-main);
+            border-color: var(--border-color);
         }
     </style>
 </head>
 <body>
     <div class="login-card">
-        <h2>福誠查藥系統</h2>
+        <h3>福誠查藥系統</h3>
+        <div class="subtitle">請登入帳號以查詢藥品庫存與核定價</div>
+
         <div th:if="${param.error}" class="error-message">
-            無效的使用者名稱或密碼，請重新輸入。
+            使用者名稱或密碼錯誤，請重新輸入。
         </div>
         <div th:if="${param.logout}" class="logout-message">
-            您已經成功登出。
+            您已成功登出系統。
         </div>
+
         <form action="/login" method="post">
-            <div class="form-group">
-                <input type="text" id="username" name="username" class="form-control" placeholder="使用者名稱" required autofocus>
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label for="username" style="font-size: 16px; font-weight: 700; margin-bottom: 6px;">帳號</label>
+                <input type="text" id="username" name="username" class="form-control" placeholder="請輸入帳號" required autofocus>
             </div>
-            <div class="form-group">
-                <input type="password" id="password" name="password" class="form-control" placeholder="密碼" required>
+            <div class="form-group" style="margin-bottom: 22px;">
+                <label for="password" style="font-size: 16px; font-weight: 700; margin-bottom: 6px;">密碼</label>
+                <input type="password" id="password" name="password" class="form-control" placeholder="請輸入密碼" required>
             </div>
             <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
-            <button class="btn btn-primary" type="submit">登入</button>
+            <button class="btn btn-primary" type="submit">登入系統</button>
         </form>
+
+        <div class="text-center">
+            <button type="button" class="theme-toggle-link" onclick="toggleTheme()">
+                <span class="glyphicon glyphicon-adjust"></span> <span id="theme-toggle-text">切換暗色模式</span>
+            </button>
+        </div>
     </div>
+    <script>
+        (function() {
+            var current = document.documentElement.getAttribute('data-theme') || 'light';
+            var label = document.getElementById('theme-toggle-text');
+            if (label) label.textContent = current === 'dark' ? '切換亮色模式' : '切換暗色模式';
+        })();
+    </script>
 </body>
 </html>

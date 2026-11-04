@@ -2,7 +2,6 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <nav class="navbar navbar-custom navbar-fixed-top" th:fragment="nav">
     <div class="container-fluid">
-        <!-- Brand and toggle get grouped for better mobile display -->
         <div class="navbar-header">
             <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
                 data-target="#nav-collapse-section" aria-expanded="false">
@@ -14,95 +13,85 @@
             <a class="navbar-brand" href="/home">福誠查藥系統</a>
         </div>
 
-        <!-- Collect the nav links, forms, and other content for toggling -->
         <div class="collapse navbar-collapse" id="nav-collapse-section">
-            <form class="navbar-form navbar-left" action="/query" method="POST">
-                <div class="input-group">
-                    <input type="text" name="querystring" placeholder="輸入要查詢(藥名/公司)" class="form-control">
-                    <span class="input-group-btn">
-                        <button type="submit" class="btn btn-success">查詢</button>
-                    </span>
-                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
-                </div>
-            </form>
-
             <ul class="nav navbar-nav">
-                <li><a href="/download"><span class="glyphicon glyphicon-phone"></span> 下載APP</a></li>
+                <li><a href="/home"><span class="glyphicon glyphicon-search"></span> 藥品查詢</a></li>
+                <li><a href="/download"><span class="glyphicon glyphicon-phone"></span> 下載 APP</a></li>
                 <li th:if="${#httpServletRequest != null and #httpServletRequest.isUserInRole('ADMIN')}">
-                    <a href="/admin/version"><span class="glyphicon glyphicon-cog"></span> APP版本管理</a>
+                    <a href="/admin/version"><span class="glyphicon glyphicon-cog"></span> 版本管理</a>
                 </li>
             </ul>
-            <ul class="nav navbar-nav">
-                <li><a href="javascript:void(0)" style="cursor:default;">藥品公司查詢</a></li>
+
+            <ul class="nav navbar-nav navbar-right" style="margin-right: 0;">
+                <li>
+                    <button type="button" class="btn nav-action-btn" onclick="toggleTheme()" title="切換亮色 / 暗色模式" style="margin-right: 10px;">
+                        <span class="glyphicon glyphicon-adjust"></span> <span class="theme-toggle-label">切換暗色</span>
+                    </button>
+                </li>
+                <li>
+                    <form id="logout" action="/logout" method="post" style="display: inline-block; margin: 0;">
+                        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
+                        <button type="submit" class="btn nav-action-btn">
+                            <span class="glyphicon glyphicon-log-out"></span> 登出
+                        </button>
+                    </form>
+                </li>
             </ul>
-            <form class="navbar-form navbar-left" action="/query/list" method="POST">
-                <div class="input-group">
-                    <select class="custom-select" name="querystring" multiple="multiple" style="width:200px;">
-                        <option th:each="item:${medCompanys}" th:value="${item}" th:text="${item}"></option>
-                    </select>
-                    <span class="input-group-btn">
-                        <button type="submit" class="btn btn-success">查詢</button>
-                    </span>
-                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
-                </div>
-            </form>
+        </div>
 
-            <form class="navbar-form navbar-right" id="logout" action="/logout" method="post">
-                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
-                <button type="submit" class="btn btn-info">登出</button>
-            </form>
-        </div><!-- /.navbar-collapse -->
-
-        <!-- Loading Mask Element -->
+        <!-- 載入遮罩 -->
         <div id="loading-mask">
             <div class="spinner"></div>
-            <div class="loading-text">資料爬取與分析中，請稍候...</div>
+            <div class="loading-text">資料查詢中，請稍候...</div>
         </div>
 
         <script>
             $(document).ready(function () {
-                $('.custom-select').select2({
-                    tags: true,
-                    tokenSeparators: [',', ' ']
-                });
+                // 初始化頁面上所有的公司多選下拉選單
+                if ($('.company-select').length > 0) {
+                    $('.company-select').select2({
+                        placeholder: "選擇或輸入藥品公司名稱（可複選）",
+                        allowClear: true,
+                        tags: true,
+                        tokenSeparators: [',', ' '],
+                        width: '100%'
+                    });
+                }
 
-                // 當送出查詢表單時，使用 AJAX 非同步發送
-                $('form').on('submit', function (e) {
-                    // 排除登出按鈕
-                    if ($(this).attr('id') !== 'logout') {
-                        e.preventDefault(); // 阻止傳統跳頁
-                        if ($('#nav-collapse-section').hasClass('in')) {
-                            $('#nav-collapse-section').collapse('hide'); // 手機版送出後自動收合漢堡選單
-                        }
-                        var form = $(this);
-                        var url = form.attr('action');
-                        var method = form.attr('method');
-                        var data = form.serialize();
-
-                        $('#loading-mask').css('display', 'flex'); // 顯示 Loading 遮罩
-
-                        $.ajax({
-                            type: method,
-                            url: url,
-                            data: data,
-                            success: function (response) {
-                                // 將回傳的結果片段覆蓋原本的主內容區塊
-                                $('#main-content').replaceWith(response);
-                                $('#loading-mask').hide(); // 隱藏遮罩
-                            },
-                            error: function (xhr) {
-                                if (xhr.status === 401) {
-                                    alert("登入已過期，請重新登入！");
-                                    window.location.href = '/login';
-                                } else {
-                                    alert("查詢發生錯誤，請重試！");
-                                }
-                                $('#loading-mask').hide(); // 隱藏遮罩
-                            }
-                        });
+                // 攔截查詢表單 (.ajax-query-form)，使用 AJAX 更新下方 #main-content 結果區
+                $(document).on('submit', '.ajax-query-form', function (e) {
+                    e.preventDefault();
+                    if ($('#nav-collapse-section').hasClass('in')) {
+                        $('#nav-collapse-section').collapse('hide');
                     }
+                    var form = $(this);
+                    var url = form.attr('action');
+                    var method = form.attr('method');
+                    var data = form.serialize();
+
+                    $('#loading-mask').css('display', 'flex');
+
+                    $.ajax({
+                        type: method,
+                        url: url,
+                        data: data,
+                        success: function (response) {
+                            $('#main-content').replaceWith(response);
+                            $('#loading-mask').hide();
+                        },
+                        error: function (xhr) {
+                            if (xhr.status === 401) {
+                                alert("登入已過期，請重新登入！");
+                                window.location.href = '/login';
+                            } else {
+                                alert("查詢發生錯誤，請重試！");
+                            }
+                            $('#loading-mask').hide();
+                        }
+                    });
                 });
             });
         </script>
     </div>
 </nav>
+</html>

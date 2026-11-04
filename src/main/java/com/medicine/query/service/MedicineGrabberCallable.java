@@ -120,8 +120,25 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
                 .replace("\\", "").replace("}", "").replace("{", "");
     }
 
+    public static String normalizeQuery(String query) {
+        if (query == null) {
+            return "";
+        }
+        return query.replace('\u3000', ' ')
+                .replaceAll("[【】\\[\\]\\(\\)（）「」『』\"'<>《》]", "")
+                .trim();
+    }
+
+    public static boolean isHealthCode(String s) {
+        if (s == null) {
+            return false;
+        }
+        String trimmed = s.trim();
+        return trimmed.length() == 10 && trimmed.matches("^[a-zA-Z]{1,2}[0-9a-zA-Z]{8,9}$");
+    }
+
     public MedicineGrabberCallable(String queryName) {
-        this.queryName = queryName;
+        this.queryName = normalizeQuery(queryName);
     }
 
     @Override
@@ -172,7 +189,8 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
 
     public String getContext(String name, String cookiePara) {
         try {
-            String targetUrl = getBaseUrl() + "/order.php?act=query&&drug=" + URLEncoder.encode(name, "utf-8");
+            String param = isHealthCode(name) ? "hid" : "drug";
+            String targetUrl = getBaseUrl() + "/order.php?act=query&" + param + "=" + URLEncoder.encode(name, "utf-8");
             return executeGetRequest(targetUrl, cookiePara);
         } catch (Exception e) {
             log.error("Getcontext Error ", e);
@@ -182,7 +200,8 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
 
     public String getContextPage(String name, String cookiePara, int Now_page) {
         try {
-            String targetUrl = getBaseUrl() + "/order.php?act=query&&drug=" + URLEncoder.encode(name, "utf-8") + "&page=" + Now_page;
+            String param = isHealthCode(name) ? "hid" : "drug";
+            String targetUrl = getBaseUrl() + "/order.php?act=query&" + param + "=" + URLEncoder.encode(name, "utf-8") + "&page=" + Now_page;
             return executeGetRequest(targetUrl, cookiePara);
         } catch (Exception e) {
             log.error("Getcontext Error ", e);
@@ -196,7 +215,9 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
         HttpURLConnection connection = (HttpURLConnection) getUrl.openConnection();
         
         if (connection instanceof HttpsURLConnection) {
-            ((HttpsURLConnection) connection).setSSLSocketFactory(getTrustAllSSLSocketFactory());
+            HttpsURLConnection httpsConn = (HttpsURLConnection) connection;
+            httpsConn.setSSLSocketFactory(getTrustAllSSLSocketFactory());
+            httpsConn.setHostnameVerifier((hostname, session) -> true);
         }
         
         connection.setRequestMethod("GET");

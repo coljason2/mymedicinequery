@@ -6,93 +6,73 @@
 <nav class="navbar navbar-custom navbar-fixed-top" th:include="components/nav :: nav"></nav>
 <body>
 
-<div class="container" id="main-content" style="margin-top: 25px; margin-bottom: 50px;">
-    <div class="row">
-        <div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12">
-            
-            <div class="panel panel-default" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); overflow: hidden;">
-                <!-- 標題欄 -->
-                <div class="panel-heading" style="background: linear-gradient(135deg, #1e88e5, #1565c0); color: #ffffff; padding: 25px 20px; text-align: center;">
-                    <h2 style="margin: 0; font-weight: bold; font-size: 24px;">
-                        <span class="glyphicon glyphicon-phone"></span> 福誠查藥 Android APP
-                    </h2>
-                    <p style="margin-top: 8px; margin-bottom: 0; font-size: 15px; opacity: 0.9;">
-                        隨身隨查大盤庫存、健保核定價與食藥署仿單詳細資訊
-                    </p>
+<div class="workspace-container" style="max-width: 760px;">
+    <div class="clean-card">
+        <div style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 18px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+            <div>
+                <h3 style="margin: 0 0 6px 0; font-weight: 700; font-size: 22px;">
+                    福誠查藥 Android 行動版
+                </h3>
+                <p class="text-muted" style="margin: 0; font-size: 16px;">
+                    支援手機查詢大盤庫存、健保核定價與食藥署仿單詳細資訊
+                </p>
+            </div>
+            <div style="font-size: 15px; color: var(--text-secondary); background-color: var(--bg-subtle); padding: 8px 14px; border-radius: 6px; border: 1px solid var(--border-subtle);">
+                版本：<strong style="color: var(--primary-color);" th:text="'v' + ${config.versionName}">v3.6</strong>
+                <span style="margin: 0 6px; color: var(--border-color);">|</span>
+                代碼：<strong th:text="${config.versionCode}">4</strong>
+            </div>
+        </div>
+
+        <div class="row" style="align-items: center;">
+            <!-- 左側 QR Code -->
+            <div class="col-sm-5 text-center" style="margin-bottom: 20px;">
+                <div style="display: inline-block; padding: 14px; background: #ffffff; border: 1px solid var(--border-color); border-radius: 8px;">
+                    <div id="qrcode-box" style="width: 200px; height: 200px; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
+                        <img id="qrcode-img" th:src="'https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=5&data=' + ${config.downloadUrl}" 
+                             alt="下載 QR Code" width="200" height="200" style="display: block;" />
+                    </div>
                 </div>
-
-                <div class="panel-body" style="padding: 30px 25px;">
-                    <!-- 當前版本標籤 -->
-                    <div class="text-center" style="margin-bottom: 25px;">
-                        <span class="label label-primary" style="font-size: 14px; padding: 6px 14px; border-radius: 20px; margin-right: 6px;">
-                            最新版本：<strong th:text="'v' + ${config.versionName}">v3.6</strong>
-                        </span>
-                        <span class="label label-default" style="font-size: 13px; padding: 6px 12px; border-radius: 20px;">
-                            版本代碼：<strong th:text="${config.versionCode}">4</strong>
-                        </span>
-                    </div>
-
-                    <!-- QR Code 展示區 -->
-                    <div class="text-center" style="margin-bottom: 25px;">
-                        <div style="display: inline-block; padding: 15px; background: #ffffff; border: 2px solid #e0e0e0; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">
-                            <!-- QR Code 容器 -->
-                            <div id="qrcode-box" style="width: 200px; height: 200px; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
-                                <img id="qrcode-img" th:src="'https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=5&data=' + ${config.downloadUrl}" 
-                                     alt="下載 QR Code" width="200" height="200" style="display: block; border-radius: 6px;" />
-                            </div>
-                        </div>
-                        <p class="text-muted" style="margin-top: 12px; font-size: 14px;">
-                            <span class="glyphicon glyphicon-camera"></span> 使用手機相機或條碼掃描器掃描，即可下載安裝檔
-                        </p>
-                    </div>
-
-                    <!-- 下載按鈕 (手機端直接點擊) -->
-                    <div style="margin-bottom: 30px;">
-                        <a th:href="${config.downloadUrl}" target="_blank" class="btn btn-success btn-lg btn-block"
-                           style="height: 50px; font-size: 18px; font-weight: bold; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                            <span class="glyphicon glyphicon-download-alt"></span> 立即下載 Android APK
-                        </a>
-                        <div class="text-center" style="margin-top: 8px;">
-                            <small class="text-muted">若下載連結為 Google Drive，點擊「仍要下載」即可獲取安裝檔。</small>
-                        </div>
-                    </div>
-
-                    <!-- 更新日誌區塊 -->
-                    <div th:if="${config.updateLog != null and !#strings.isEmpty(config.updateLog)}" style="margin-bottom: 25px;">
-                        <h4 style="font-weight: bold; color: #333; margin-bottom: 10px;">
-                            <span class="glyphicon glyphicon-list-alt"></span> 最新版本更新內容
-                        </h4>
-                        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; font-size: 14px; line-height: 1.6; white-space: pre-line; color: #4a5568;"
-                             th:text="${config.updateLog}">
-                        </div>
-                    </div>
-
-                    <!-- 安裝教學說明 -->
-                    <div class="alert alert-info" style="margin-bottom: 0; border-radius: 8px; font-size: 13px; line-height: 1.7;">
-                        <h5 style="margin-top: 0; font-weight: bold;"><span class="glyphicon glyphicon-info-sign"></span> 安裝提示</h5>
-                        <ol style="margin-bottom: 0; padding-left: 20px;">
-                            <li>點擊上方按鈕下載 <code>.apk</code> 檔案。</li>
-                            <li>下載完成後在手機通知列或「下載」資料夾中點選該檔案進行安裝。</li>
-                            <li>若系統出現「已封鎖安裝不明應用程式」提示，請點選「設定」並允許瀏覽器「安裝未知應用程式」即可順利完成。</li>
-                        </ol>
-                    </div>
-
+                <div class="text-muted" style="margin-top: 10px; font-size: 15px;">
+                    手機相機掃描下載
                 </div>
             </div>
 
-            <div class="text-center" style="margin-top: 15px;">
-                <a href="/home" class="btn btn-default">
-                    <span class="glyphicon glyphicon-arrow-left"></span> 返回網頁查藥首頁
-                </a>
-            </div>
+            <!-- 右側下載與安裝說明 -->
+            <div class="col-sm-7">
+                <div style="margin-bottom: 22px;">
+                    <a th:href="${config.downloadUrl}" target="_blank" class="btn btn-primary btn-block"
+                       style="height: 48px; font-size: 18px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <span class="glyphicon glyphicon-download-alt"></span> 下載 Android APK 安裝檔
+                    </a>
+                    <div style="margin-top: 8px; font-size: 14px;" class="text-muted">
+                        若導向 Google 雲端硬碟，請點選「仍要下載」取得檔案。
+                    </div>
+                </div>
 
+                <div th:if="${config.updateLog != null and !#strings.isEmpty(config.updateLog)}" style="margin-bottom: 20px;">
+                    <div style="font-weight: 700; font-size: 16px; margin-bottom: 8px; color: var(--text-main);">
+                        版本更新內容
+                    </div>
+                    <div style="background-color: var(--bg-subtle); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 14px; font-size: 15px; line-height: 1.6; white-space: pre-line; color: var(--text-secondary);"
+                         th:text="${config.updateLog}">
+                    </div>
+                </div>
+
+                <div style="background-color: var(--bg-subtle); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 14px 18px; font-size: 15px; line-height: 1.7; color: var(--text-secondary);">
+                    <div style="font-weight: 700; margin-bottom: 6px; color: var(--text-main); font-size: 16px;">安裝步驟</div>
+                    <ol style="margin-bottom: 0; padding-left: 20px;">
+                        <li>下載完成後，於手機通知列或「下載」資料夾點選 <code>.apk</code> 檔案。</li>
+                        <li>若出現安全性提示，請依指示允許瀏覽器「安裝未知應用程式」即可完成。</li>
+                    </ol>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <footer class="footer" th:include="components/footer :: footer"></footer>
 
-<!-- 引入客戶端 QRCode 函式庫做動態優化 (若 CDN 失敗有上方 API 兜底) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script th:inline="javascript">
     /*<![CDATA[*/
@@ -100,7 +80,7 @@
         var downloadUrl = /*[[${config.downloadUrl}]]*/ '';
         if (typeof QRCode !== 'undefined' && downloadUrl) {
             var box = document.getElementById('qrcode-box');
-            box.innerHTML = ''; // 清空預設 img
+            box.innerHTML = '';
             new QRCode(box, {
                 text: downloadUrl,
                 width: 200,
@@ -115,4 +95,3 @@
 </script>
 </body>
 </html>
-

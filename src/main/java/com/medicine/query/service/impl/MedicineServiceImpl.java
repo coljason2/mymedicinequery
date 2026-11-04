@@ -48,14 +48,15 @@ public class MedicineServiceImpl implements MedicineService {
     private ExecutorService executorService;
 
     @Override
-    @Cacheable(value = "medicine", key = "#queryName", unless = "#result == null or #result.isEmpty()")
+    @Cacheable(value = "medicine", key = "T(com.medicine.query.service.MedicineGrabberCallable).normalizeQuery(#queryName)", unless = "#result == null or #result.isEmpty()")
     public List<MedEntity> getMedicine(String queryName) {
         try {
-            if (StringUtils.isBlank(queryName)) {
+            String normalized = MedicineGrabberCallable.normalizeQuery(queryName);
+            if (StringUtils.isBlank(normalized)) {
                 throw new MedException("查詢空白");
             }
 
-            MedicineGrabberCallable callable = new MedicineGrabberCallable(queryName.trim());
+            MedicineGrabberCallable callable = new MedicineGrabberCallable(normalized);
             Future<List<MedEntity>> future = executorService.submit(callable);
 
             return future.get(70, TimeUnit.SECONDS);

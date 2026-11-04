@@ -6,49 +6,43 @@
 </head>
 <nav class="navbar navbar-custom navbar-fixed-top" th:include="components/nav :: nav"></nav>
 <body>
-<div class="container" style="margin-top: 30px; margin-bottom: 50px;">
-    <div class="row">
-        <div class="col-md-6 col-md-offset-3 col-sm-8 col-sm-offset-2 col-xs-12 text-center">
+<div class="workspace-container" style="max-width: 600px;">
+    <div class="clean-card text-center">
+        <div style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 16px; margin-bottom: 22px;">
+            <h3 style="margin: 0; font-weight: 700; font-size: 22px;">
+                <span class="glyphicon glyphicon-print"></span> 7-11 IBON 雲端列印
+            </h3>
+        </div>
+        
+        <div th:if="${fileCode != null and !#strings.isEmpty(fileCode)}">
+            <p class="text-muted" style="font-size: 16px; margin-bottom: 18px;">
+                請持下方取件編號或 QR Code 至全台 7-ELEVEN 門市 ibon 機台列印
+            </p>
             
-            <div class="panel panel-default" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); overflow: hidden;">
-                <div class="panel-heading" style="background: linear-gradient(135deg, #1e88e5, #1565c0); color: #ffffff; padding: 20px;">
-                    <h3 style="margin: 0; font-weight: bold;">
-                        <span class="glyphicon glyphicon-print"></span> 7-11 IBON 雲端列印
-                    </h3>
-                </div>
-                
-                <div class="panel-body" style="padding: 30px 20px;">
-                    <div th:if="${fileCode != null and !#strings.isEmpty(fileCode)}">
-                        <p class="text-muted" style="font-size: 14px; margin-bottom: 15px;">
-                            請持下方取件碼或 QR Code 至全台 7-ELEVEN 門市 ibon 機台列印
-                        </p>
-                        
-                        <div style="background-color: #f8fafc; border: 2px dashed #90caf9; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
-                            <span style="font-size: 14px; color: #555;">取件編號 (PIN)：</span>
-                            <h2 style="margin: 5px 0 0 0; font-weight: bold; color: #0d47a1; letter-spacing: 2px;" th:text="${fileNumber}"></h2>
-                        </div>
-
-                        <div style="display: inline-block; padding: 12px; background: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); margin-bottom: 15px;">
-                            <img width="200" height="200" th:src="'data:image/png;base64,'+${fileCode}" alt="IBON QR Code" style="display: block;"/>
-                        </div>
-                        
-                        <p class="text-muted" style="font-size: 13px; margin-bottom: 0;">
-                            <span class="glyphicon glyphicon-time"></span> 文件將於 ibon 系統保留 3 天，逾期將自動作廢。
-                        </p>
-                    </div>
-
-                    <div th:if="${fileCode == null or #strings.isEmpty(fileCode)}" class="alert alert-warning" style="margin-bottom: 0;">
-                        <h4 style="margin-top: 0; font-weight: bold;"><span class="glyphicon glyphicon-exclamation-sign"></span> 上傳連線失敗</h4>
-                        <p style="margin-bottom: 10px;">目前無法連線至 7-11 IBON 伺服器，可能因連線逾時或服務暫停，請稍後再試。</p>
-                        <a href="/home" class="btn btn-default btn-sm">返回首頁</a>
-                    </div>
-                </div>
+            <div style="background-color: var(--bg-subtle); border: 1px dashed var(--border-color); border-radius: 8px; padding: 18px; margin-bottom: 22px;">
+                <span class="text-muted" style="font-size: 15px;">取件編號 (PIN)：</span>
+                <h2 style="margin: 8px 0 0 0; font-weight: 700; color: var(--primary-color); letter-spacing: 2px; font-size: 28px;" th:text="${fileNumber}"></h2>
             </div>
 
-            <a href="/home" class="btn btn-default" style="margin-top: 15px;">
-                <span class="glyphicon glyphicon-arrow-left"></span> 返回首頁
-            </a>
+            <div style="display: inline-block; padding: 14px; background: #ffffff; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 18px;">
+                <img width="200" height="200" th:src="'data:image/png;base64,'+${fileCode}" alt="IBON QR Code" style="display: block;"/>
+            </div>
             
+            <p class="text-muted" style="font-size: 15px; margin-bottom: 0;">
+                <span class="glyphicon glyphicon-time"></span> 文件將於 ibon 系統保留 3 天，逾期將自動作廢。
+            </p>
+        </div>
+
+        <div th:if="${fileCode == null or #strings.isEmpty(fileCode)}" class="alert alert-warning" style="margin-bottom: 0;">
+            <h4 style="margin-top: 0; font-weight: 700;">上傳連線失敗</h4>
+            <p style="margin-bottom: 12px; font-size: 16px;">目前無法連線至 7-11 IBON 伺服器，可能因連線逾時或服務暫停，請稍後再試。</p>
+            <a href="/home" class="btn btn-default">返回首頁</a>
+        </div>
+
+        <div style="margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border-subtle);">
+            <a href="/home" class="btn btn-default">
+                返回查藥首頁
+            </a>
         </div>
     </div>
 </div>

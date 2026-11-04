@@ -1,86 +1,66 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:include="components/header :: header">
-    <title>福誠查藥系統 - 首頁</title>
+    <title>福誠查藥系統</title>
 </head>
 <nav class="navbar navbar-custom navbar-fixed-top" th:include="components/nav :: nav"></nav>
 <body>
 
-<div class="container-fluid" id="main-content">
-    <div class="row" style="margin-top: 10px;">
-        <div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12">
-            <div class="jumbotron" style="padding: 25px 20px; margin-top: 10px;">
-                <h3 style="margin-top: 0; margin-bottom: 12px; color: #1565c0; font-weight: bold;">
-                    <span class="glyphicon glyphicon-search"></span> 藥品資訊即時查詢
-                </h3>
-                <p class="text-muted" style="font-size: 14px; margin-bottom: 20px;">
-                    請輸入藥品名稱、健保碼或選擇合作藥品公司進行大盤庫存與健保核定價查詢。
-                </p>
-
-                <!-- 1. 藥名 / 健保碼查詢表單 -->
-                <form action="/query" method="POST" id="home-search-form" style="margin-bottom: 20px;">
-                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
-                    <label for="home-querystring" style="font-size: 14px; margin-bottom: 8px; color: #333;">依藥名或健保碼查詢：</label>
-                    <div class="input-group" style="width: 100%;">
-                        <input type="text" id="home-querystring" name="querystring" class="form-control"
-                               placeholder="輸入藥品名稱或 10 碼健保碼..." required
-                               style="height: 44px; font-size: 15px; border-radius: 6px 0 0 6px;">
-                        <span class="input-group-btn" style="width: auto;">
-                            <button type="submit" class="btn btn-success" style="height: 44px; font-size: 15px; padding: 0 20px; border-radius: 0 6px 6px 0;">
-                                <span class="glyphicon glyphicon-search"></span> 查詢
-                            </button>
-                        </span>
+<div class="workspace-container">
+    <!-- 頂部常駐雙欄整合查詢列 -->
+    <div class="search-panel">
+        <div class="search-grid">
+            <!-- 左欄：藥名 / 健保碼查詢 -->
+            <form action="/query" method="POST" class="ajax-query-form" style="margin: 0;">
+                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+                <label for="home-querystring" class="search-field-label">
+                    藥品名稱 / 健保代碼查詢
+                </label>
+                <div class="search-flex-row">
+                    <div class="search-input-wrap">
+                        <input type="text" id="home-querystring" name="querystring" class="form-control search-input-lg"
+                               placeholder="輸入藥名或 10 碼健保碼（例如：安咳、AC33052100）" required autofocus>
                     </div>
-                </form>
+                    <button type="submit" class="btn btn-primary search-btn-lg">
+                        <span class="glyphicon glyphicon-search"></span> 查詢
+                    </button>
+                </div>
+            </form>
 
-                <hr style="margin: 20px 0; border-top: 1px solid #e0e0e0;">
-
-                <!-- 2. 藥品公司多選查詢表單 -->
-                <form action="/query/list" method="POST" id="home-list-form">
-                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
-                    <label for="home-company-select" style="font-size: 14px; margin-bottom: 8px; color: #333;">依藥品公司篩選查詢：</label>
-                    <div class="form-group" style="margin-bottom: 12px;">
-                        <select id="home-company-select" class="form-control" name="querystring" multiple="multiple" style="width: 100%;">
+            <!-- 右欄：藥品公司多選篩選 -->
+            <form action="/query/list" method="POST" class="ajax-query-form" style="margin: 0;">
+                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+                <label for="home-company-select" class="search-field-label">
+                    依藥品公司批次篩選
+                </label>
+                <div class="search-flex-row">
+                    <div class="search-input-wrap">
+                        <select id="home-company-select" class="form-control company-select" name="querystring" multiple="multiple" style="width: 100%;">
                             <option th:each="item:${medCompanys}" th:value="${item}" th:text="${item}"></option>
                         </select>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-block" style="height: 44px; font-size: 15px; border-radius: 6px;">
-                        <span class="glyphicon glyphicon-filter"></span> 篩選查詢指定公司藥品
+                    <button type="submit" class="btn btn-default search-btn-lg">
+                        篩選公司
                     </button>
-                </form>
-            </div>
-
-            <!-- APP 下載推廣卡片 -->
-            <div class="panel panel-info" style="border-radius: 8px; border-color: #b3e5fc; background-color: #f1f9fe;">
-                <div class="panel-body" style="padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
-                    <div>
-                        <h4 style="margin: 0; font-weight: bold; color: #0277bd; font-size: 16px;">
-                            <span class="glyphicon glyphicon-phone"></span> 福誠查藥 Android APP 現正提供下載
-                        </h4>
-                        <p class="text-muted" style="margin: 5px 0 0 0; font-size: 13px;">
-                            隨身隨查大盤庫存、健保核定價與仿單資訊，支援手機掃碼與即時推播。
-                        </p>
-                    </div>
-                    <a href="/download" class="btn btn-info btn-sm" style="font-weight: bold;">
-                        <span class="glyphicon glyphicon-qrcode"></span> 查看下載與 QR Code
-                    </a>
                 </div>
-            </div>
+            </form>
+        </div>
+    </div>
 
+    <!-- 下方結果顯示區 (查詢後由 AJAX 直接替換此區塊) -->
+    <div id="main-content">
+        <div class="clean-card" style="text-align: center; padding: 48px 24px;">
+            <div style="font-size: 20px; font-weight: 700; color: var(--text-main); margin-bottom: 10px;">
+                請於上方輸入條件開始查詢
+            </div>
+            <p class="text-muted" style="font-size: 16px; max-width: 640px; margin: 0 auto; line-height: 1.7;">
+                支援藥品中英文名稱、10 碼健保代碼直接搜尋，或由右側選單勾選多間合作藥廠查詢即時庫存與核定價。
+            </p>
         </div>
     </div>
 </div>
 
 <footer class="footer" th:include="components/footer :: footer"></footer>
 
-<script>
-    $(document).ready(function () {
-        $('#home-company-select').select2({
-            placeholder: "請選擇或輸入藥品公司名稱 (可複選)",
-            allowClear: true,
-            width: '100%'
-        });
-    });
-</script>
 </body>
 </html>
