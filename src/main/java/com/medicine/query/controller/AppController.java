@@ -132,12 +132,18 @@ public class AppController {
     public String queryHealthCode(@PathVariable("acCode") String acCode, Model model) {
         log.info("健保碼：{}", acCode);
         try {
-            model.addAttribute("link", medicineService.createFDALink(acCode));
+            String link = medicineService.createFDALink(acCode);
+            if (link != null && !link.trim().isEmpty() && !link.equals("https://lmspiq.fda.gov.tw/web/DRPIQ/DRPIQ1000Result?licId=")) {
+                return "redirect:" + link;
+            }
+            model.addAttribute("link", "");
+            model.addAttribute("errorMessage", "查無此健保代碼之食藥署仿單資料。");
         } catch (Exception e) {
             log.error("queryHealthCode error for code [{}]: ", acCode, e);
             model.addAttribute("link", "");
             model.addAttribute("errorMessage", "查詢健保碼仿單時發生異常，請稍後再試。");
         }
+        model.addAttribute("medCompanys", Constant.medCompanys);
         return "jump";
     }
 }

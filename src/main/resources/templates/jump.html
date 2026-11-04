@@ -1,20 +1,35 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:include="components/header :: header"></head>
-<nav class="navbar navbar-inverse navbar-fixed-top" th:include="components/nav :: nav"></nav>
+<head th:include="components/header :: header">
+    <title>食藥署仿單查詢跳轉</title>
+</head>
+<nav class="navbar navbar-custom navbar-fixed-top" th:include="components/nav :: nav"></nav>
 <body>
-<div class="container">
-    <h2>Redirecting...</h2>
-    <a id="jumpLink" th:text="${link}"></a>
-    <script>
-        var linkElement = document.getElementById("jumpLink");
-        if (linkElement !== '') {
-            window.location.href = linkElement.innerText;
-        } else {
-            // Handle case where link is empty
-            console.error('Link is empty.');
-        }
-    </script>
+<div class="container" style="margin-top: 40px; margin-bottom: 40px;">
+    <!-- 查無仿單或查詢失敗提示 -->
+    <div th:if="${errorMessage}" class="alert alert-warning" style="font-size: 15px; border-radius: 8px;">
+        <span class="glyphicon glyphicon-exclamation-sign"></span> <strong th:text="${errorMessage}"></strong>
+        <div style="margin-top: 15px;">
+            <a href="javascript:history.back()" class="btn btn-default btn-sm">
+                <span class="glyphicon glyphicon-arrow-left"></span> 返回上一頁
+            </a>
+        </div>
+    </div>
+
+    <!-- 正常跳轉中狀態 -->
+    <div th:unless="${errorMessage}">
+        <h2>Redirecting...</h2>
+        <p class="text-muted">正在前往食藥署仿單詳細頁面，若瀏覽器未自動跳轉，請點擊下方連結：</p>
+        <p>
+            <a id="jumpLink" th:href="${link}" th:text="${link}" target="_blank" style="font-size: 16px; word-break: break-all;"></a>
+        </p>
+        <script>
+            var linkElement = document.getElementById("jumpLink");
+            if (linkElement && linkElement.getAttribute("href") && linkElement.getAttribute("href").trim() !== "") {
+                window.location.href = linkElement.getAttribute("href").trim();
+            }
+        </script>
+    </div>
 </div>
 <footer class="footer" th:include="components/footer :: footer"></footer>
 </body>

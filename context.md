@@ -73,7 +73,7 @@
 
 ### 2. CORS 與跨域防護
 * 嚴禁對所有路徑啟用萬用字元跨域（`/**`）。
-* CORS 映射僅嚴格限制於 `/api/**`、`/version.json` 與 `/download`。
+* CORS 映射僅嚴格限制於 `/api/**`、`/get/**`、`/version.json` 與 `/download`。
 
 ### 3. XSS 防護
 * Thymeleaf 模板應統一使用標準 URL 表達式 `@{}...` 與 `th:text` 進行輸出跳脫，嚴禁在未脫敏的情況下直接輸出未過濾的請求參數。

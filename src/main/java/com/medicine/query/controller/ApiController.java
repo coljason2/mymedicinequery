@@ -18,7 +18,7 @@ public class ApiController {
     @Autowired
     MedicineService medicineService;
 
-    @GetMapping(value = "/get/{med}")
+    @GetMapping(value = {"/get/{med}", "/api/get/{med}"})
     public List<MedEntity> getMedicine(@PathVariable("med") String med) {
         try {
             List<MedEntity> result = medicineService.getMedicine(med);

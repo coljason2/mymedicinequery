@@ -58,7 +58,7 @@ public class MedicineServiceImpl implements MedicineService {
             MedicineGrabberCallable callable = new MedicineGrabberCallable(queryName.trim());
             Future<List<MedEntity>> future = executorService.submit(callable);
 
-            return future.get();
+            return future.get(70, TimeUnit.SECONDS);
         } catch (Exception e) {
             log.error("getMedicine error for queryName [{}]: ", queryName, e);
             return Collections.emptyList();
@@ -169,12 +169,13 @@ public class MedicineServiceImpl implements MedicineService {
         List<MedEntity> medList = new ArrayList<>();
         for (Future<List<MedEntity>> f : futureList) {
             try {
-                List<MedEntity> res = f.get();
+                List<MedEntity> res = f.get(70, TimeUnit.SECONDS);
                 if (res != null) {
                     medList.addAll(res);
                 }
             } catch (Exception e) {
                 log.error("future get error in getMedicineByList: ", e);
+                f.cancel(true);
             }
         }
 
@@ -183,6 +184,7 @@ public class MedicineServiceImpl implements MedicineService {
     }
 
     @Override
+    @Cacheable(value = "fdaLink", key = "#code", unless = "#result == null or #result.isEmpty() or #result == 'https://lmspiq.fda.gov.tw/web/DRPIQ/DRPIQ1000Result?licId='")
     public String createFDALink(String code) {
         ObjectNode jsonObject = mapper.createObjectNode();
         jsonObject.put("DRUG_CODE", code);
@@ -225,9 +227,9 @@ public class MedicineServiceImpl implements MedicineService {
                 }
             }
             log.info("resultLink: {}", resultLink);
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("createFDALink error for code [{}]: ", code, e);
-            throw new RuntimeException(e);
+            return resultLink;
         }
 
         return resultLink;
