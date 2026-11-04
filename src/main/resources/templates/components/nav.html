@@ -68,6 +68,9 @@
                     // 排除登出按鈕
                     if ($(this).attr('id') !== 'logout') {
                         e.preventDefault(); // 阻止傳統跳頁
+                        if ($('#nav-collapse-section').hasClass('in')) {
+                            $('#nav-collapse-section').collapse('hide'); // 手機版送出後自動收合漢堡選單
+                        }
                         var form = $(this);
                         var url = form.attr('action');
                         var method = form.attr('method');

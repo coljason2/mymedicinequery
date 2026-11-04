@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <header th:fragment="header">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <link rel="stylesheet"
           href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
     <script type="text/javascript"
@@ -20,12 +20,12 @@
 
         body {
             margin-bottom: 60px;
-            font-size: 18px;
+            font-size: 16px;
             font-family: "Helvetica Neue", Helvetica, Arial, "微軟正黑體", "Microsoft JhengHei", sans-serif;
             background-color: #f4f6f9;
         }
         .table {
-            font-size: 18px;
+            font-size: 15px;
         }
 
         /* 醫療風格自訂導覽列 */
@@ -53,14 +53,50 @@
             background-color: #ffffff;
         }
 
-        /* DataTables 現代化控制列 (尺寸加大與響應式) */
+        /* 表格欄位寬度與風格 */
+        .col-med-name { min-width: 180px; }
+        .col-med-stock { min-width: 140px; }
+        .col-med-code { min-width: 150px; }
+        .col-med-price { min-width: 100px; }
+
+        .price-highlight {
+            font-weight: bold;
+            color: #D32F2F;
+        }
+        .hid-price-highlight {
+            font-weight: bold;
+            color: #00695C;
+        }
+        .code-wrapper {
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+        }
+        .code-link {
+            font-weight: bold;
+            color: #1565C0;
+            text-decoration: underline;
+        }
+        .copy-btn {
+            margin-left: 6px;
+            padding: 2px 8px;
+            font-size: 11px;
+            border-radius: 4px;
+        }
+        .stock-badge {
+            margin-right: 4px;
+            font-size: 11px;
+            padding: 2px 6px;
+        }
+
+        /* DataTables 現代化控制列 (尺寸與響應式) */
         .dt-controls .col-sm-12 {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
             justify-content: flex-start;
             margin-bottom: 15px;
-            gap: 20px;
+            gap: 15px;
         }
         .dataTables_length, .dt-buttons {
             display: inline-block;
@@ -73,29 +109,12 @@
         .dataTables_filter label {
             margin-bottom: 0;
         }
-        /* 加大按鈕與輸入框 */
+        /* 桌機端按鈕與輸入框 */
         .dataTables_length select, .dataTables_filter input, .dt-buttons .btn {
-            height: 42px !important;
-            padding: 8px 14px !important;
-            font-size: 18px !important;
+            height: 40px !important;
+            padding: 6px 12px !important;
+            font-size: 15px !important;
             border-radius: 6px !important;
-        }
-        /* 手機版專屬優化 */
-        @media (max-width: 767px) {
-            .dt-controls .col-sm-12 {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .dataTables_length, .dt-buttons, .dataTables_filter {
-                width: 100%;
-                margin-right: 0;
-                margin-bottom: 10px;
-                text-align: left !important;
-            }
-            .dt-buttons .btn {
-                width: 24%;
-                padding: 8px 0 !important;
-            }
         }
 
         /* 現代化區塊樣式 */
@@ -109,7 +128,7 @@
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             padding: 15px;
-            margin-top: 20px;
+            margin-top: 15px;
             margin-bottom: 20px;
         }
 
@@ -156,7 +175,7 @@
         }
 
         body > .container-fluid {
-            padding: 60px 15px 0;
+            padding: 65px 15px 60px;
         }
 
         .container-fluid .text-muted {
@@ -170,6 +189,126 @@
 
         code {
             font-size: 80%;
+        }
+
+        /* 手機版專屬優化 (max-width: 767px) */
+        @media (max-width: 767px) {
+            body {
+                font-size: 14px;
+            }
+            body > .container-fluid {
+                padding: 65px 10px 50px;
+            }
+            .table {
+                font-size: 13px;
+            }
+            .table > thead > tr > th,
+            .table > tbody > tr > td {
+                padding: 8px 6px !important;
+            }
+            /* 手機端縮減最小欄寬，減少橫向過度推擠 */
+            .col-med-name { min-width: 120px; }
+            .col-med-stock { min-width: 105px; }
+            .col-med-code { min-width: 110px; }
+            .col-med-price { min-width: 70px; }
+
+            .table-responsive {
+                padding: 10px 6px;
+                margin-top: 10px;
+                margin-bottom: 15px;
+                border: 1px solid #e2e8f0;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .dt-controls .col-sm-12 {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+                margin-bottom: 10px;
+            }
+            .dataTables_length, .dt-buttons, .dataTables_filter {
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 6px;
+                text-align: left !important;
+            }
+            .dataTables_filter {
+                display: block;
+            }
+            .dataTables_filter label {
+                width: 100%;
+                display: block;
+            }
+            .dataTables_filter input {
+                width: 100% !important;
+                margin-left: 0 !important;
+                display: block;
+                height: 38px !important;
+                font-size: 14px !important;
+                border-radius: 6px !important;
+            }
+            .dataTables_length select {
+                height: 38px !important;
+                font-size: 14px !important;
+                border-radius: 6px !important;
+            }
+            .dt-buttons {
+                display: flex !important;
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+            .dt-buttons .btn {
+                flex: 1 1 calc(25% - 6px);
+                min-width: 55px;
+                font-size: 12px !important;
+                height: 34px !important;
+                padding: 6px 0 !important;
+                border-radius: 6px !important;
+            }
+            .dataTables_paginate {
+                text-align: center !important;
+                margin-top: 10px;
+            }
+            .dataTables_paginate .pagination > li > a {
+                padding: 5px 9px;
+                font-size: 12px;
+            }
+
+            /* 手機版導覽列折疊後的表單微調 */
+            .navbar-custom .navbar-form {
+                margin: 8px 0;
+                padding: 0 15px;
+                border: none;
+                box-shadow: none;
+            }
+            .navbar-custom .navbar-form .input-group {
+                width: 100%;
+                display: flex;
+            }
+            .navbar-custom .navbar-form .input-group input.form-control {
+                flex: 1;
+                width: 100%;
+                font-size: 14px;
+                height: 40px;
+            }
+            .navbar-custom .navbar-form .input-group-btn {
+                width: auto;
+            }
+            .navbar-custom .navbar-form .input-group-btn .btn {
+                height: 40px;
+                font-size: 14px;
+                padding: 0 14px;
+            }
+            .navbar-custom .select2-container {
+                width: 100% !important;
+            }
+
+            .admin-btn-group .btn {
+                display: block;
+                width: 100%;
+                margin-right: 0 !important;
+                margin-bottom: 10px;
+            }
         }
     </style>
     <!-- Main CSS-->
