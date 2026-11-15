@@ -1,0 +1,27 @@
+services:
+  caddy:
+    image: caddy:alpine
+    container_name: local-caddy
+    restart: always
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: local-ngrok
+    restart: always
+    command: http caddy:8080 --pooling-enabled
+    environment:
+      - NGROK_AUTHTOKEN=3GSDqRR0166vuz5A6jXQJIwCkbn_7C5cZBQLfZqqAnzwTVzK1
+    depends_on:
+      - caddy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

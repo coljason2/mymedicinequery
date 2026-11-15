@@ -1,0 +1,19 @@
+:8080 {
+	basic_auth {
+		jason $2a$14$00WHYQFc6ez1ik0.3p56S.yWgRcBiaxrITSR6cx70vu.pc70hZo/K
+	}
+
+	reverse_proxy https://www.chahwa.com.tw {
+		header_up Host {http.reverse_proxy.upstream.host}
+		header_up -X-Forwarded-For
+		header_up -X-Forwarded-Host
+		header_up -X-Forwarded-Proto
+		header_up -Authorization
+		header_up -Ngrok-Skip-Browser-Warning
+
+		transport http {
+			keepalive 90s
+			keepalive_idle_conns 10
+		}
+	}
+}
