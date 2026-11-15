@@ -10,12 +10,12 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="/home">福誠查藥系統</a>
+            <a class="navbar-brand" href="/home" onclick="if($('#result-querystring, #home-querystring').length > 0){ quickScrollToSearch(); return false; }">福誠查藥系統</a>
         </div>
 
         <div class="collapse navbar-collapse" id="nav-collapse-section">
             <ul class="nav navbar-nav">
-                <li><a href="/home"><span class="glyphicon glyphicon-search"></span> 藥品查詢</a></li>
+                <li><a href="/home" onclick="if($('#result-querystring, #home-querystring').length > 0){ quickScrollToSearch(); return false; }"><span class="glyphicon glyphicon-search"></span> 藥品查詢</a></li>
                 <li><a href="/download"><span class="glyphicon glyphicon-phone"></span> 下載 APP</a></li>
                 <li th:if="${#httpServletRequest != null and #httpServletRequest.isUserInRole('ADMIN')}">
                     <a href="/admin/version"><span class="glyphicon glyphicon-cog"></span> 版本管理</a>
@@ -43,6 +43,14 @@
         <div id="loading-mask">
             <div class="spinner"></div>
             <div class="loading-text">資料查詢中，請稍候...</div>
+        </div>
+
+        <!-- 懸浮回到查詢按鈕 -->
+        <div id="btn-back-to-search" class="floating-search-btn" onclick="quickScrollToSearch()" title="快速回到上方搜尋欄（快捷鍵：/）" style="display: none;">
+            <span class="glyphicon glyphicon-search"></span>
+            <span>回到查詢</span>
+            <span class="glyphicon glyphicon-arrow-up" style="font-size: 12px;"></span>
+            <span class="shortcut-key">/</span>
         </div>
 
         <script>
