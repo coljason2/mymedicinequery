@@ -62,7 +62,33 @@ class QueryApplicationTests {
         assertNotNull(resHid2);
         assertFalse(resHid2.isEmpty(), "A029634151 健保碼查詢應成功獲取藥品資料！");
 
-        // 5. 測試 Web Controller POSTQuery 【安咳】
+        // 5. 測試 諾快（藥廠應為山德士，而非關鍵字「諾快」）
+        List<MedEntity> resNuokuai = medicineService.getMedicine("諾快");
+        assertNotNull(resNuokuai);
+        assertFalse(resNuokuai.isEmpty(), "查詢【諾快】應有結果！");
+        for (MedEntity m : resNuokuai) {
+            log.info("【諾快】name=[{}], company=[{}]", m.getName(), m.getCompany());
+            assertFalse("諾快".equals(m.getCompany()), "藥廠不可直接誤植為搜尋關鍵字【諾快】！");
+            if (m.getName().contains("山德士")) {
+                assertTrue("山德士".equals(m.getCompany()), "帶有(山德士)之藥品，解析出的藥廠應為山德士！");
+            }
+        }
+
+        // 6. 測試 白花油（PASTEL 舒緩棒等不應誤植為白花油）
+        List<MedEntity> resBaihua = medicineService.getMedicine("白花油");
+        assertNotNull(resBaihua);
+        assertFalse(resBaihua.isEmpty(), "查詢【白花油】應有結果！");
+        for (MedEntity m : resBaihua) {
+            log.info("【白花油】name=[{}], company=[{}]", m.getName(), m.getCompany());
+            if (m.getName().contains("PASTEL")) {
+                assertFalse("白花油".equals(m.getCompany()), "PASTEL 產品之藥廠不可誤植為【白花油】！");
+            }
+            if (m.getName().contains("曼秀雷敦")) {
+                assertTrue("曼秀雷敦".equals(m.getCompany()), "曼秀雷敦產品之藥廠應正確識別為【曼秀雷敦】！");
+            }
+        }
+
+        // 7. 測試 Web Controller POSTQuery 【安咳】
         Model model = new ConcurrentModel();
         String view = appController.POSTQuery("【安咳】", model);
         @SuppressWarnings("unchecked")

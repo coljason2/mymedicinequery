@@ -161,7 +161,7 @@ public class MedicineServiceImpl implements MedicineService {
         for (String company : namesList) {
             String trimmed = company.trim();
             if (!trimmed.isEmpty()) {
-                MedicineGrabberCallable callable = new MedicineGrabberCallable(trimmed);
+                MedicineGrabberCallable callable = new MedicineGrabberCallable(trimmed, true);
                 futureList.add(executorService.submit(callable));
             }
         }

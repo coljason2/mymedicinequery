@@ -1,5 +1,6 @@
 package com.medicine.query.service;
 
+import com.medicine.query.common.Constant;
 import com.medicine.query.exception.MedException;
 import com.medicine.query.model.LoginFormData;
 import com.medicine.query.model.MedEntity;
@@ -13,13 +14,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.*;
 import java.security.cert.X509Certificate;
-import java.util.Base64;
-import java.util.Collections;
+import java.util.*;
 import javax.net.ssl.*;
-import java.util.ArrayList;
-import java.util.List;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Matcher;
@@ -34,6 +31,32 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
     private static final String DEFAULT_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36";
 
     private String queryName;
+    private final boolean isCompanyQuery;
+
+    public static final List<String> KNOWN_COMPANIES;
+    static {
+        Set<String> set = new LinkedHashSet<>();
+        // 台灣主要藥廠與知名品牌清單
+        set.addAll(Arrays.asList(
+                "健喬信元", "百時美施貴寶", "百靈佳殷格翰", "台灣塩野義", "台灣第一三共", "台灣東洋",
+                "曼秀雷敦", "美納里尼", "諾和諾德", "田邊三菱", "安斯泰來", "中化裕民", "合春製藥",
+                "山德士", "生達", "晟德", "永信", "南光", "衛達", "友華", "福元", "意欣", "一成", "陽生",
+                "皇佳", "黃氏", "國嘉", "新瑞", "泰宗", "鼎泰", "井田", "天義", "衛肯", "順華", "鴻文",
+                "星寶", "曼哈頓", "永勝", "韋淳", "拜耳", "海喬", "益普生", "幸生", "永茂", "西海",
+                "柏理", "榮民", "羅得", "應元", "元宙", "五洲", "華興", "中化", "信東", "瑪科隆",
+                "政德", "武田", "盈盈", "台裕", "派頓", "明大", "杏林", "聯亞", "健康", "美強",
+                "十全", "瑞士", "保瑞", "明德", "大豐", "回春堂", "壽元", "信隆", "汎生", "杏輝",
+                "諾華", "輝瑞", "賽諾菲", "葛蘭素", "GSK", "MSD", "默沙東", "亞培", "健喬", "健亞",
+                "友霖", "培力", "東洋", "瑩碩", "順天", "科達", "莊松榮", "港香蘭", "順天堂", "萬應",
+                "白花油", "大塚", "衛采", "第一三共", "嬌生", "愛爾康", "博士倫", "參天", "三菱", "禮來",
+                "艾伯維", "濟生", "百靈佳", "大正", "鹽野義", "小林", "裕利", "久裕", "美時"
+        ));
+        set.addAll(Constant.medCompanys);
+        // 依字串長度由長到短排序，優先匹配較長名稱（例如「健喬信元」優於「健喬」）
+        List<String> list = new ArrayList<>(set);
+        list.sort((a, b) -> Integer.compare(b.length(), a.length()));
+        KNOWN_COMPANIES = Collections.unmodifiableList(list);
+    }
 
     static String getBaseUrl() {
         String reverseProxyUrl = System.getenv("REVERSE_PROXY_URL");
@@ -138,7 +161,12 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
     }
 
     public MedicineGrabberCallable(String queryName) {
+        this(queryName, false);
+    }
+
+    public MedicineGrabberCallable(String queryName, boolean isCompanyQuery) {
         this.queryName = normalizeQuery(queryName);
+        this.isCompanyQuery = isCompanyQuery;
     }
 
     @Override
@@ -262,14 +290,69 @@ public class MedicineGrabberCallable implements Callable<List<MedEntity>> {
     }
 
 
+    private static final Pattern PARENTHESES_PATTERN = Pattern.compile("[\\(（]([^\\(\\)（）]+)[\\)）]");
+    private static final Pattern NON_COMPANY_WORDS = Pattern.compile(".*(瓶|盒|支|袋|組|條|包|罐|粒|顆|錠|劑|管|桶|箱|卷|片|排|打|健保|自費|口服|外用|停產|缺藥|斷貨|售完|贈品|另贈|買|送|特大|大|小|綠|紫|白|紅|黃|藍|黑|薄荷|酷涼|莓果|香橙|山茶花|口溶|膜衣|緩釋|注射|懸浮|糖漿|軟膏|乳膏|點眼|滴劑|膠囊|顆粒|粉劑|栓劑|貼布|噴劑|含稅|未稅|促銷|特價).*");
+
+    public static String extractCompany(String rawName, String fallbackCompany) {
+        if (rawName == null || rawName.trim().isEmpty()) {
+            return fallbackCompany;
+        }
+
+        // 1. 優先從括號 (...) 或 （...） 解析藥廠名稱（如「(山德士)」、「(永信)」）
+        Matcher matcher = PARENTHESES_PATTERN.matcher(rawName);
+        String lastCandidate = null;
+        while (matcher.find()) {
+            String candidate = matcher.group(1).trim();
+            if (isValidCompanyCandidate(candidate)) {
+                lastCandidate = cleanCompanyName(candidate);
+            }
+        }
+        if (lastCandidate != null) {
+            return lastCandidate;
+        }
+
+        // 2. 從常見知名藥廠清單比對藥品名稱（如「曼秀雷敦...」、「萬應...」）
+        for (String c : KNOWN_COMPANIES) {
+            if (rawName.contains(c)) {
+                return c;
+            }
+        }
+
+        // 3. 若為公司批次查詢，且未解析出其他藥廠，才使用查詢的公司名稱作為 fallback
+        return fallbackCompany;
+    }
+
+    private static boolean isValidCompanyCandidate(String text) {
+        if (text == null) return false;
+        String s = text.trim();
+        // 長度需在 2 到 10 字元之間
+        if (s.length() < 2 || s.length() > 10) return false;
+        // 不能包含任何數字 (排除 100T, 60ML, 10支, 14T, 12.5G 等劑量規格)
+        if (s.matches(".*\\d.*")) return false;
+        // 必須包含中文字元
+        if (!s.matches(".*[\\u4e00-\\u9fa5].*")) return false;
+        // 排除單位、狀態、促銷字眼
+        if (NON_COMPANY_WORDS.matcher(s).matches()) return false;
+        return true;
+    }
+
+    private static String cleanCompanyName(String s) {
+        return s.replaceAll("(藥廠|製藥|生技|化學|藥品)$", "").trim();
+    }
+
     private void setResponseEntities(List<MedEntity> meds, Document resault, String company) {
         for (org.jsoup.nodes.Element n : resault.getElementsByClass("item_text")) {
             MedEntity m = new MedEntity();
             m.setOid(n.getElementsByClass("code").text());
             m.setOidPrice(n.getElementsByClass("price").text());
             m.setIsEnough(n.getElementsByClass("sell_price").text());
-            m.setName(n.getElementsByClass("name").text());
-            m.setCompany(company);
+            String rawName = n.getElementsByClass("name").text();
+            m.setName(rawName);
+
+            // 若非公司批次篩選查詢，fallbackCompany 設為 null，避免將搜尋關鍵字（例如「諾快」、「白花油」）誤植為藥廠
+            String fallback = this.isCompanyQuery ? company : null;
+            m.setCompany(extractCompany(rawName, fallback));
+
             meds.add(m);
         }
     }
